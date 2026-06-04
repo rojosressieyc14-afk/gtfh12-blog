@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temp files
+nul
+C:*
+D:*
+
+# Agent/editor internal
+.opencode-imperial/
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Binary
+server/server
+server/tmp/
