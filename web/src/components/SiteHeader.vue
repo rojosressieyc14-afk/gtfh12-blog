@@ -33,7 +33,7 @@
       <a
         v-if="userStore.isLoggedIn && userStore.profile?.role === 'admin'"
         class="ghost-btn"
-        href="http://localhost:3001"
+        href="/PulseBlog/admin/"
         target="_blank"
         rel="noreferrer"
       >
@@ -63,7 +63,7 @@
           <router-link v-if="userStore.isLoggedIn" to="/notifications">通知</router-link>
           <router-link v-if="userStore.isLoggedIn" to="/profile">个人资料</router-link>
           <hr v-if="userStore.isLoggedIn" />
-          <a v-if="userStore.isLoggedIn && userStore.profile?.role === 'admin'" href="http://localhost:3001" target="_blank" rel="noreferrer">后台管理</a>
+          <a v-if="userStore.isLoggedIn && userStore.profile?.role === 'admin'" href="/PulseBlog/admin/" target="_blank" rel="noreferrer">后台管理</a>
           <router-link v-if="!userStore.isLoggedIn" to="/auth">登录 / 注册</router-link>
           <button v-else class="mobile-logout" @click="logout">退出登录</button>
         </nav>

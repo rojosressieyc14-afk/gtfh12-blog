@@ -93,7 +93,11 @@ async function copyLink(url) {
 }
 
 function fileUrl(url) {
-  return `http://localhost:8080${url}`;
+  if (import.meta.env.DEV) {
+    return `http://localhost:8080${url}`;
+  }
+  const base = import.meta.env.VITE_BASE_PATH || "";
+  return `${base}${url}`;
 }
 
 function formatSize(size) {

@@ -9,7 +9,7 @@ import UploadsView from "../views/UploadsView.vue";
 import SettingsView from "../views/SettingsView.vue";
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory("/PulseBlog/admin/"),
   routes: [
     { path: "/login", name: "login", component: LoginView, meta: { title: "管理后台登录" } },
     { path: "/", name: "dashboard", component: DashboardView, meta: { title: "后台总览" } },

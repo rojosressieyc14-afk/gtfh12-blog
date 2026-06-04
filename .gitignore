@@ -32,6 +32,16 @@ logs/
 nul
 C:*
 D:*
+*~
+*.exe~
+
+# Development workflow / agent internals
+workflow/
+.opencode-imperial/
+
+# Temp files with colon prefix (Windows path artifacts)
+C:*tempadmin*
+C:*login*
 
 # Agent/editor internal
 .opencode-imperial/
