@@ -17,3 +17,4 @@ export const getMyProject = (id) => client.get(`/my/projects/${id}`);
 export const createProject = (payload) => client.post("/projects", payload);
 export const updateProject = (id, payload) => client.put(`/projects/${id}`, payload);
 export const submitProject = (id) => client.post(`/projects/${id}/submit`);
+export const deleteProject = (id) => client.delete(`/projects/${id}`);

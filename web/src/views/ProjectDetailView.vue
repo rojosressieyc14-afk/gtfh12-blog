@@ -170,15 +170,16 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
+import { useRoute } from "vue-router";
 import { getProject } from "../api/project";
 import { toAssetUrl } from "../utils/asset";
 
 const route = useRoute();
 const project = ref(null);
 
-const html = computed(() => marked.parse(project.value?.content || ""));
+const html = computed(() => DOMPurify.sanitize(marked.parse(project.value?.content || "")));
 const coverUrl = computed(() => toAssetUrl(project.value?.coverImage));
 const completenessScore = computed(() => {
   if (!project.value) return 0;

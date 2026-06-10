@@ -8,6 +8,7 @@ import (
 	"blog/server/internal/middleware"
 	"blog/server/internal/service"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type ProjectHandler struct {
@@ -130,6 +131,24 @@ func (h *ProjectHandler) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"item": item})
+}
+
+func (h *ProjectHandler) Delete(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	authUser := middleware.GetAuthUser(c)
+
+	if err := h.projectService.Delete(uint(id), authUser.ID, authUser.Role); err != nil {
+		status := http.StatusInternalServerError
+		if errors.Is(err, service.ErrProjectNoPermission) {
+			status = http.StatusForbidden
+		} else if errors.Is(err, gorm.ErrRecordNotFound) {
+			status = http.StatusNotFound
+		}
+		c.JSON(status, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "项目已删除"})
 }
 
 func (h *ProjectHandler) Submit(c *gin.Context) {

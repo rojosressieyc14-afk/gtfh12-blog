@@ -53,3 +53,7 @@ uploads/*
 # Binary
 server/server
 server/tmp/
+
+# Generated JWT RSA keys
+server/keys/
+server/test-keys/

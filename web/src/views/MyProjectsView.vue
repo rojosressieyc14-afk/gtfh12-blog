@@ -12,12 +12,10 @@
       <article class="panel-card service-card">
         <p class="eyebrow">管理</p>
         <h4>统一查看草稿、审核中和已发布项目</h4>
-        <p>这里适合持续维护你的项目案例库，把项目从结果展示整理成可阅读、可复盘的公开作品。</p>
       </article>
       <article class="panel-card service-card">
         <p class="eyebrow">建议</p>
         <h4>优先补齐亮点、难点和结果</h4>
-        <p>项目是否有说服力，往往不只看页面截图，更看你怎样定义问题、做取舍并把结果讲清楚。</p>
       </article>
     </div>
 
@@ -31,7 +29,7 @@
           <span class="status-chip" :class="item.status">{{ labelMap[item.status] || item.status }}</span>
         </div>
 
-        <p class="detail-summary">{{ item.summary || "这个项目还没有摘要，可以补一段案例概览。" }}</p>
+        <p class="detail-summary">{{ item.summary || "暂无摘要" }}</p>
 
         <div v-if="item.techStacks?.length" class="tag-row">
           <span v-for="stack in item.techStacks.slice(0, 6)" :key="stack" class="tag-chip"># {{ stack }}</span>
@@ -47,6 +45,7 @@
               查看详情
             </router-link>
             <router-link class="inline-link" :to="`/project-editor/${item.id}`">继续编辑</router-link>
+            <button class="inline-link delete-link" @click="handleDelete(item.id, item.title)">删除</button>
           </div>
         </footer>
       </article>
@@ -54,7 +53,7 @@
 
     <div v-else class="empty-panel">
       <h4>你还没有项目</h4>
-      <p>先补一个代表性项目案例，这里会逐渐变成你的项目后台和公开作品入口。</p>
+      <p>创建你的第一个项目。</p>
     </div>
 
     <div class="pager-row">
@@ -67,7 +66,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import { listMyProjects } from "../api/project";
+import { deleteProject, listMyProjects } from "../api/project";
 
 const projects = ref([]);
 const page = ref(1);
@@ -95,6 +94,16 @@ function statusCopy(item) {
   if (item.status === "published") return "项目已经公开展示。再次编辑后会回到草稿状态。";
   if (item.status === "rejected") return "项目已被驳回，修改后可以重新提交审核。";
   return "";
+}
+
+async function handleDelete(id, title) {
+  if (!confirm(`确定要删除项目「${title}」吗？此操作不可撤销。`)) return;
+  try {
+    await deleteProject(id);
+    await loadMine();
+  } catch (e) {
+    alert("删除失败：" + (e.response?.data?.message || e.message));
+  }
 }
 
 async function goToPage(nextPage) {
@@ -132,6 +141,20 @@ onMounted(loadMine);
   margin-top: 12px;
   color: #fecaca;
   font-size: 0.92rem;
+}
+
+.delete-link {
+  color: #f87171;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.delete-link:hover {
+  color: #ef4444;
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {

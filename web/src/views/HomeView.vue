@@ -37,15 +37,15 @@
     <div class="hero-orbit hero-orbit--portfolio">
       <article class="orbit-card">
         <strong>项目案例</strong>
-        <p>把已经完成的工作整理成可阅读、可比较、可证明能力的公开案例。</p>
+        <p>已完成工作的可读、可比较、可证明的公开案例。</p>
       </article>
       <article class="orbit-card">
         <strong>学习沉淀</strong>
-        <p>把笔记、总结和复盘长期归档，形成持续增长的内容资产。</p>
+        <p>笔记、总结和复盘的长期归档，持续增长的内容资产。</p>
       </article>
       <article class="orbit-card">
         <strong>公开表达</strong>
-        <p>把项目、文章和个人品牌放进同一个入口，对外呈现更完整的能力画像。</p>
+        <p>项目、文章和个人品牌汇聚在同一入口的能力画像。</p>
       </article>
     </div>
   </section>
@@ -53,21 +53,18 @@
   <section class="portfolio-intro">
     <article class="panel-card portfolio-card portfolio-card--wide">
       <p class="eyebrow">定位</p>
-      <h3>这不只是博客，而是你的长期作品展示面。</h3>
-      <p>项目可以写成案例，学习可以写成笔记，复盘可以写成公开输出，最后沉淀成一套持续更新的个人品牌资产。</p>
+      <h3>项目案例、学习笔记与公开输出的长期作品展示面。</h3>
     </article>
 
     <article class="panel-card portfolio-card">
       <p class="eyebrow">项目</p>
       <h3>展示你真正做过什么</h3>
-      <p>适合放案例复盘、过程拆解、架构取舍和交付结果，让别人快速理解你的做事方式。</p>
       <router-link class="ghost-btn" :to="ownerProjectsLink">查看项目案例</router-link>
     </article>
 
     <article class="panel-card portfolio-card">
       <p class="eyebrow">学习</p>
       <h3>沉淀你的成长轨迹</h3>
-      <p>适合放源码阅读、框架笔记、踩坑记录和学习路线，让知识积累有持续出口。</p>
       <router-link class="ghost-btn" :to="studyArticlesLink">查看学习内容</router-link>
     </article>
   </section>
@@ -76,7 +73,7 @@
     <div class="section-head">
       <div>
         <p class="eyebrow">精选项目</p>
-        <h3>最适合放在首页的案例</h3>
+        <h3>精选项目</h3>
       </div>
       <router-link class="ghost-btn" :to="browseProjectsLink">查看完整作品集</router-link>
     </div>
@@ -105,7 +102,7 @@
     </div>
     <div v-else class="empty-panel">
       <h4>还没有已发布项目</h4>
-      <p>先发布几个代表性项目，这里就会开始像一个真正的作品集首页。</p>
+      <p>发布代表性项目后这里会展示你的作品集。</p>
     </div>
   </section>
 
@@ -141,7 +138,7 @@
       <div class="section-head">
         <div>
           <p class="eyebrow">推荐内容</p>
-          <h3>适合放在首页的文章</h3>
+          <h3>推荐内容</h3>
         </div>
         <router-link class="ghost-btn" :to="articlesLibraryLink">全部文章</router-link>
       </div>
@@ -197,7 +194,7 @@
 
     <div v-if="!articles.length" class="empty-panel">
       <h4>还没有已发布文章</h4>
-      <p>可以先写一篇自我介绍、一篇项目复盘或一篇学习笔记，把首页内容慢慢铺起来。</p>
+      <p>写一篇文章来开始你的内容积累。</p>
     </div>
 
     <div class="pager-row">

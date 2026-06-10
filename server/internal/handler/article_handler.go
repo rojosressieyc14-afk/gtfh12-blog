@@ -9,6 +9,7 @@ import (
 	"blog/server/internal/model"
 	"blog/server/internal/service"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type ArticleHandler struct {
@@ -129,6 +130,24 @@ func (h *ArticleHandler) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"item": article})
+}
+
+func (h *ArticleHandler) Delete(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	authUser := middleware.GetAuthUser(c)
+
+	if err := h.articleService.Delete(uint(id), authUser.ID, authUser.Role); err != nil {
+		status := http.StatusInternalServerError
+		if errors.Is(err, service.ErrArticleNoPermission) {
+			status = http.StatusForbidden
+		} else if errors.Is(err, gorm.ErrRecordNotFound) {
+			status = http.StatusNotFound
+		}
+		c.JSON(status, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "文章已删除"})
 }
 
 func (h *ArticleHandler) Submit(c *gin.Context) {

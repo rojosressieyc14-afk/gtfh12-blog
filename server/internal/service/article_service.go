@@ -534,6 +534,42 @@ func (s *ArticleService) syncTags(article *model.Article, names []string) error 
 	return s.db.Model(article).Association("Tags").Replace(tags)
 }
 
+func (s *ArticleService) Delete(articleID, userID uint, role string) error {
+	var article model.Article
+	if err := s.db.First(&article, articleID).Error; err != nil {
+		return err
+	}
+	if role != model.RoleAdmin && article.AuthorID != userID {
+		return ErrArticleNoPermission
+	}
+
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("article_id = ?", articleID).Delete(&model.ArticleLike{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("article_id = ?", articleID).Delete(&model.ArticleFavorite{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("article_id = ?", articleID).Delete(&model.ArticleReview{}).Error; err != nil {
+			return err
+		}
+		var commentIDs []uint
+		tx.Model(&model.Comment{}).Where("article_id = ?", articleID).Pluck("id", &commentIDs)
+		if len(commentIDs) > 0 {
+			if err := tx.Where("parent_id IN ?", commentIDs).Delete(&model.Comment{}).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("id IN ?", commentIDs).Delete(&model.Comment{}).Error; err != nil {
+				return err
+			}
+		}
+		if err := tx.Model(&article).Association("Tags").Clear(); err != nil {
+			return err
+		}
+		return tx.Delete(&article).Error
+	})
+}
+
 func (s *ArticleService) ToggleLike(articleID, userID uint) (*ReactionSummary, error) {
 	return s.toggleReaction(articleID, userID, "like")
 }

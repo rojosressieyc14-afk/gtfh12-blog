@@ -15,8 +15,10 @@ type Config struct {
 	DBUser       string
 	DBPassword   string
 	DBName       string
-	JWTSecret    string
-	DefaultAdmin string
+	JWTSecret         string
+	JWTPrivateKeyPath string
+	JWTPublicKeyPath  string
+	DefaultAdmin      string
 	DefaultPass  string
 	WebOrigin    string
 	AdminOrigin  string
@@ -37,8 +39,10 @@ func Load() Config {
 		DBUser:       getEnv("DB_USER", "root"),
 		DBPassword:   getEnv("DB_PASSWORD", ""),
 		DBName:       getEnv("DB_NAME", "blog_system"),
-		JWTSecret:    getEnv("JWT_SECRET", "change-me-secret"),
-		DefaultAdmin: getEnv("DEFAULT_ADMIN_USERNAME", "admin"),
+		JWTSecret:         getEnv("JWT_SECRET", ""),
+		JWTPrivateKeyPath: getEnv("JWT_PRIVATE_KEY_PATH", "./keys/private.pem"),
+		JWTPublicKeyPath:  getEnv("JWT_PUBLIC_KEY_PATH", "./keys/public.pem"),
+		DefaultAdmin:      getEnv("DEFAULT_ADMIN_USERNAME", "admin"),
 		DefaultPass:  getEnv("DEFAULT_ADMIN_PASSWORD", "admin123"),
 		WebOrigin:    getEnv("WEB_ORIGIN", "http://localhost:5173"),
 		AdminOrigin:  getEnv("ADMIN_ORIGIN", "http://localhost:5174"),
@@ -97,7 +101,6 @@ func (cfg Config) Validate() error {
 		{name: "DB_PORT", value: cfg.DBPort},
 		{name: "DB_USER", value: cfg.DBUser},
 		{name: "DB_NAME", value: cfg.DBName},
-		{name: "JWT_SECRET", value: cfg.JWTSecret},
 		{name: "DEFAULT_ADMIN_USERNAME", value: cfg.DefaultAdmin},
 		{name: "DEFAULT_ADMIN_PASSWORD", value: cfg.DefaultPass},
 		{name: "WEB_ORIGIN", value: cfg.WebOrigin},

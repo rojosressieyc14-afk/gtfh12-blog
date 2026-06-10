@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"blog/server/internal/config"
 	"blog/server/internal/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +15,7 @@ type AuthUser struct {
 	Status   string
 }
 
-func RequireAuth(cfg config.Config) gin.HandlerFunc {
+func RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
 		if !strings.HasPrefix(header, "Bearer ") {
@@ -25,7 +24,7 @@ func RequireAuth(cfg config.Config) gin.HandlerFunc {
 			return
 		}
 
-		claims, err := utils.ParseJWT(cfg.JWTSecret, strings.TrimPrefix(header, "Bearer "))
+		claims, err := utils.ParseJWT(strings.TrimPrefix(header, "Bearer "))
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "登录凭证无效或已过期"})
 			c.Abort()

@@ -162,6 +162,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
 import { createArticle, getArticle, submitArticle, updateArticle } from "../api/article";
 import { getMetadata } from "../api/meta";
 import { uploadImage } from "../api/upload";
@@ -201,7 +202,7 @@ const parsedTags = computed(() =>
     .filter((item, index, list) => item && list.indexOf(item) === index)
 );
 
-const compiledMarkdown = computed(() => marked.parse(form.content || "## 右侧会实时显示你的 Markdown 预览"));
+const compiledMarkdown = computed(() => DOMPurify.sanitize(marked.parse(form.content || "## 右侧会实时显示你的 Markdown 预览")));
 const submitLabel = computed(() => (userStore.isAdmin ? "直接发布" : "提交审核"));
 const submitModeLabel = computed(() => (userStore.isAdmin ? "管理员可直接发布" : "普通用户提交后进入审核"));
 const coverUrl = computed(() => toAssetUrl(form.coverImage));

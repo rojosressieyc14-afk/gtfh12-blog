@@ -11,7 +11,7 @@
           </div>
 
           <h2 class="detail-title">{{ article.title }}</h2>
-          <p class="detail-summary">{{ article.summary || "这篇文章暂时还没有补充摘要。" }}</p>
+          <p class="detail-summary">{{ article.summary || "暂无摘要" }}</p>
 
           <div class="detail-stats article-detail-stats">
             <span>{{ formatDate(article.publishedAt || article.createdAt) }}</span>
@@ -67,15 +67,7 @@
             <p v-else class="detail-summary">继续补充小标题后，这里会自动生成文章目录。</p>
           </section>
 
-          <section class="project-detail-panel article-reading-panel">
-            <p class="eyebrow">阅读提示</p>
-            <h3>这篇内容适合怎么读</h3>
-            <div class="project-highlight-list project-highlight-list--detail">
-              <span>先看摘要和目录，快速判断这篇内容是不是你要找的。</span>
-              <span>如果是案例型文章，重点看过程、难点和最后结论。</span>
-              <span>如果是学习型文章，建议连同标签一起看，方便后续继续检索。</span>
-            </div>
-          </section>
+
 
           <section class="project-detail-panel">
             <p class="eyebrow">作者入口</p>
@@ -141,6 +133,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
 import { useRoute } from "vue-router";
 import { createComment, getArticle, listComments, toggleFavorite, toggleLike } from "../api/article";
 import { useUserStore } from "../stores/user";
@@ -180,7 +173,7 @@ const html = computed(() => {
     const id = articleOutline.value.find((item) => item.text === text)?.id || buildHeadingId(text, 0);
     return `<h${token.depth} id="${id}">${text}</h${token.depth}>`;
   };
-  return marked.parse(article.value?.content || "", { renderer });
+  return DOMPurify.sanitize(marked.parse(article.value?.content || "", { renderer }));
 });
 
 const coverUrl = computed(() => toAssetUrl(article.value?.coverImage));

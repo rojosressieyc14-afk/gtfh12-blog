@@ -73,7 +73,7 @@ func (s *AuthService) Register(username, password string) (*model.User, string, 
 		return nil, "", err
 	}
 
-	token, err := utils.GenerateJWT(s.cfg.JWTSecret, user.ID, user.Username, user.Role)
+	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role)
 	return &user, token, err
 }
 
@@ -89,7 +89,7 @@ func (s *AuthService) Login(username, password string) (*model.User, string, err
 		return nil, "", ErrInvalidCredentials
 	}
 
-	token, err := utils.GenerateJWT(s.cfg.JWTSecret, user.ID, user.Username, user.Role)
+	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role)
 	return &user, token, err
 }
 

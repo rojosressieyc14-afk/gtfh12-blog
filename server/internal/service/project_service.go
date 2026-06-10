@@ -299,6 +299,17 @@ func (s *ProjectService) Review(projectID, reviewerID uint, payload ProjectRevie
 	return s.GetByID(projectID, reviewerID, model.RoleAdmin)
 }
 
+func (s *ProjectService) Delete(projectID, userID uint, role string) error {
+	var item model.Project
+	if err := s.db.First(&item, projectID).Error; err != nil {
+		return err
+	}
+	if role != model.RoleAdmin && item.AuthorID != userID {
+		return ErrProjectNoPermission
+	}
+	return s.db.Delete(&item).Error
+}
+
 func (s *ProjectService) ensureAuthorCanWrite(item model.Project, userID uint, role string) error {
 	if role == model.RoleAdmin {
 		return nil

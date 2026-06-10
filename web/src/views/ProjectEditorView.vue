@@ -216,6 +216,7 @@
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
 import { createProject, getMyProject, submitProject, updateProject } from "../api/project";
 import { uploadImage } from "../api/upload";
 import { toAssetUrl } from "../utils/asset";
@@ -257,7 +258,7 @@ const process = computed(() => parseInputList(processInput.value));
 const challenges = computed(() => parseInputList(challengesInput.value));
 const solutions = computed(() => parseInputList(solutionsInput.value));
 const results = computed(() => parseInputList(resultsInput.value));
-const compiledMarkdown = computed(() => marked.parse(form.content || "## 这里会实时预览你的项目正文"));
+const compiledMarkdown = computed(() => DOMPurify.sanitize(marked.parse(form.content || "## 这里会实时预览你的项目正文")));
 const coverUrl = computed(() => toAssetUrl(form.coverImage));
 const submitButtonLabel = computed(() => (userStore.isAdmin ? "直接发布" : "提交审核"));
 

@@ -8,6 +8,7 @@ import (
 	"blog/server/internal/logger"
 	"blog/server/internal/router"
 	"blog/server/internal/service"
+	"blog/server/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -31,8 +32,8 @@ func main() {
 	if err := cfg.Validate(); err != nil {
 		l.Fatal("config invalid", zap.Error(err))
 	}
-	if cfg.JWTSecret == "change-me-secret" || len(cfg.JWTSecret) < 16 {
-		l.Warn("JWT_SECRET 使用默认值或过短，生产环境请替换为至少 32 位随机字符串")
+	if err := utils.InitKeys(cfg.JWTPrivateKeyPath, cfg.JWTPublicKeyPath); err != nil {
+		l.Fatal("init JWT keys", zap.Error(err))
 	}
 	l.Info("server starting", zap.String("config", cfg.StartupSummary()))
 

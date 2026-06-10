@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang=zh-CN>
+<head><meta charset=UTF-8><title>PulseBlog 安全测试报告</title>
+<style>
+body { font-family: -apple-system, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 8px; }
+.summary { display: flex; gap: 16px; margin: 16px 0; }
+.badge { padding: 12px 24px; border-radius: 8px; color: #fff; font-weight: bold; font-size: 18px; }
+.high { background: #e74c3c; }
+.medium { background: #f39c12; }
+.low { background: #3498db; }
+.finding { background: #fff; border-radius: 8px; padding: 16px; margin: 12px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.finding h3 { margin: 0 0 8px 0; }
+.severity { display: inline-block; padding: 2px 8px; border-radius: 4px; color: #fff; font-size: 12px; }
+.detail { color: #555; }
+.fix { background: #e8f5e9; padding: 8px; border-radius: 4px; margin-top: 8px; }
+a { color: #e74c3c; }
+</style></head><body>
+<h1>PulseBlog 安全测试报告</h1>
+<p>目标: https://www.kangban.online | 时间: 2026-06-09 21:36:27</p>
+<div class=summary>
+  <div class="badge high">高危 1</div>
+  <div class="badge medium">中危 8</div>
+  <div class="badge low">低危 4</div>
+</div><div class=finding>
+<h3><span class=severity style=background:#e74c3c>高危</span> XSS 文章保存成功</h3>
+<p class=detail>含 <script> 的内容被成功保存到文章 ID=22，渲染时可能执行</p><div class=fix>修复建议: 对用户输入进行 HTML 转义输出</div></div><div class=finding>
+<h3><span class=severity style=background:#f39c12>中危</span> JWT 使用对称加密 HS256</h3>
+<p class=detail>HS256 需要强秘钥，如果秘钥泄露可伪造任意身份</p><div class=fix>修复建议: 使用 RS256 非对称加密，或确保 HS256 秘钥足够复杂</div></div><div class=finding>
+<h3><span class=severity style=background:#f39c12>中危</span> 服务器版本信息泄露: nginx</h3>
+<p class=detail>Server 头暴露了: nginx</p><div class=fix>修复建议: 隐藏或伪装 Server 头</div></div><div class=finding>
+<h3><span class=severity style=background:#f39c12>中危</span> 敏感路径可访问: /PulseBlog/.env</h3>
+<p class=detail>状态码: 200, 长度: 723</p><div class=fix>修复建议: 移除或限制这些路径的访问</div></div><div class=finding>
+<h3><span class=severity style=background:#f39c12>中危</span> 敏感路径可访问: /PulseBlog/.git/config</h3>
+<p class=detail>状态码: 200, 长度: 723</p><div class=fix>修复建议: 移除或限制这些路径的访问</div></div><div class=finding>
+<h3><span class=severity style=background:#f39c12>中危</span> 敏感路径可访问: /PulseBlog/robots.txt</h3>
+<p class=detail>状态码: 200, 长度: 723</p><div class=fix>修复建议: 移除或限制这些路径的访问</div></div><div class=finding>
+<h3><span class=severity style=background:#f39c12>中危</span> 敏感路径可访问: /PulseBlog/sitemap.xml</h3>
+<p class=detail>状态码: 200, 长度: 723</p><div class=fix>修复建议: 移除或限制这些路径的访问</div></div><div class=finding>
+<h3><span class=severity style=background:#f39c12>中危</span> 敏感路径可访问: /PulseBlog/.gitignore</h3>
+<p class=detail>状态码: 200, 长度: 723</p><div class=fix>修复建议: 移除或限制这些路径的访问</div></div><div class=finding>
+<h3><span class=severity style=background:#f39c12>中危</span> 敏感路径可访问: /PulseBlog/Dockerfile</h3>
+<p class=detail>状态码: 200, 长度: 723</p><div class=fix>修复建议: 移除或限制这些路径的访问</div></div><div class=finding>
+<h3><span class=severity style=background:#3498db>低危</span> 缺少安全响应头 CSP</h3>
+<p class=detail>Content-Security-Policy 未设置</p><div class=fix>修复建议: 添加 Content-Security-Policy 响应头</div></div><div class=finding>
+<h3><span class=severity style=background:#3498db>低危</span> 缺少安全响应头 XCTO</h3>
+<p class=detail>X-Content-Type-Options 未设置</p><div class=fix>修复建议: 添加 X-Content-Type-Options 响应头</div></div><div class=finding>
+<h3><span class=severity style=background:#3498db>低危</span> 缺少安全响应头 XFO</h3>
+<p class=detail>X-Frame-Options 未设置</p><div class=fix>修复建议: 添加 X-Frame-Options 响应头</div></div><div class=finding>
+<h3><span class=severity style=background:#3498db>低危</span> 缺少安全响应头 XXP</h3>
+<p class=detail>X-XSS-Protection 未设置</p><div class=fix>修复建议: 添加 X-XSS-Protection 响应头</div></div></body></html>
