@@ -6,6 +6,7 @@ vendor/
 .env
 .env.local
 .env.*.local
+.env.prod
 
 # Build outputs
 dist/
@@ -57,3 +58,17 @@ server/tmp/
 # Generated JWT RSA keys
 server/keys/
 server/test-keys/
+
+# Deployment artifacts (sensitive)
+pulseblog-deploy/
+eduforge-deploy/
+eduforge-deploy.tar.gz
+pulseblog-deploy.tar.gz
+redeploy.tar.gz
+deploy/nginx.conf
+PRD_V2_部署上线工程化.md
+
+# Security documentation
+DEPLOYMENT.md
+PulseBlog安全测试報告/
+PulseBlog安全测试报告/
