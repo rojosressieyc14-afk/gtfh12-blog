@@ -1,6 +1,47 @@
 # PulseBlog
 
-求职导向的个人作品集与博客平台。支持文章/项目管理、AI 审校、AI 模拟面试、后台管理面板。
+求职导向的个人品牌站与创作平台。把你的技术积累整理成真正能对外展示的作品集。
+
+> Go + Vue 3 全栈，支持文章/项目管理、AI 模拟面试、知识库笔记、向量检索、AI 审校。
+
+## 功能一览
+
+### 📝 文章系统
+- 富文本编辑器 + Markdown 支持
+- 草稿 → 提交 → 审核 → 发布 工作流
+- 分类 / 标签 / 私有文章 / 公开浏览
+- 收藏 / 点赞 / 评论
+
+### 📦 项目管理
+- 独立作品展示页（技术栈、角色、难点、成果）
+- 与文章相同的审核工作流
+
+### 🧠 知识库笔记
+- Markdown 笔记编辑器，支持分类和标签
+- 公开/私密切换，公开笔记可独立访问 `/kb-note/:id`
+- AI 向量检索（基于 Qdrant + DeepSeek Embedding）
+- 无 API Key 时自动降级，不影响笔记创建和编辑
+
+### 🤖 AI 面试官
+- 输入目标职位 + 上传简历
+- DeepSeek 驱动多轮面试
+- 逐题评分 + 最终评分报告
+
+### 🛡️ AI 审校
+- 敏感词检测
+- 内容合规审查（文章/项目提交自动触发）
+
+### 👤 个人中心
+- 创作工作台 + 设置分区
+- 创作数据统计（文章/项目/知识库/浏览量）
+- 最近动态时间线
+
+### 🔧 后台管理面板
+- Dashboard 全局统计
+- 文章/项目审核队列
+- 用户管理、评论管理、操作日志
+- 敏感词库、上传文件管理
+- AI 审校结果查看
 
 ## 技术栈
 
@@ -10,7 +51,8 @@
 | **后台管理** | Vue 3 + Pinia + Vue Router + Vite |
 | **后端** | Go + Gin + GORM |
 | **数据库** | MySQL 8.0 |
-| **AI 集成** | DeepSeek API |
+| **向量数据库** | Qdrant |
+| **AI 集成** | DeepSeek API (Chat + Embedding) |
 | **认证** | JWT (RSA256) |
 
 ## 架构
@@ -22,27 +64,15 @@
 └──────┬───────┘   └───────┬───────┘
        └────────┬──────────┘
                 │ JWT Auth
-       ┌────────▼──────────┐
-       │  API Server        │
-       │  Go + Gin + GORM   │
-       └────────┬──────────┘
+       ┌────────▼──────────┐   ┌──────────────┐
+       │  API Server        │   │  Qdrant       │
+       │  Go + Gin + GORM   │   │  向量数据库    │
+       └────────┬──────────┘   └──────────────┘
                 │
        ┌────────▼──────────┐
-       │  MySQL             │
+       │  MySQL 8.0         │
        └───────────────────┘
 ```
-
-## 功能
-
-| 功能 | 说明 |
-|---|---|
-| **文章管理** | 富文本编辑器、草稿/提交/审核/发布工作流、标签分类 |
-| **项目管理** | 项目展示页，同文章工作流 |
-| **用户系统** | 注册/登录、JWT 认证、个人资料、收藏/点赞 |
-| **AI 审校** | 自动敏感词检测、内容合规审查 |
-| **AI 面试官** | 职位输入 + 简历上传 → DeepSeek 驱动的语音面试 → 评分报告 |
-| **通知中心** | 审核结果、系统通知 |
-| **后台面板** | Dashboard 统计、内容审核队列、用户/评论/日志管理、敏感词库、上传管理 |
 
 ## 快速开始
 
@@ -51,8 +81,19 @@
 - Go 1.21+
 - Node.js 18+
 - MySQL 8.0+
+- Qdrant（可选，知识库 AI 检索需要）
 
-### 1. 后端
+### 一键启动
+
+```powershell
+.\start.ps1
+```
+
+脚本自动启动：Qdrant → MySQL → 后端(8080) → 前端(5173) → 管理后台(5174)
+
+### 手动启动
+
+#### 1. 后端
 
 ```bash
 cp server/.env.example server/.env
@@ -62,7 +103,7 @@ go mod download
 go run cmd/api/main.go
 ```
 
-### 2. 前端
+#### 2. 前端
 
 ```bash
 cd web
@@ -70,7 +111,7 @@ npm install
 npm run dev
 ```
 
-### 3. 后台管理
+#### 3. 后台管理
 
 ```bash
 cd admin
@@ -78,7 +119,14 @@ npm install
 npm run dev
 ```
 
-### 4. AI 面试官（可选）
+#### 4. Qdrant（可选，知识库需要）
+
+```bash
+cd qdrant
+.\qdrant.exe
+```
+
+#### 5. AI 功能（可选）
 
 在 `server/.env` 中配置：
 
@@ -90,26 +138,29 @@ DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
 ## 目录结构
 
 ```
-├── server/           Go 后端 API
-│   ├── cmd/api/      入口
+├── server/              Go 后端 API
+│   ├── cmd/api/         入口
 │   ├── internal/
-│   │   ├── config/   配置
-│   │   ├── database/ 数据库连接与迁移
-│   │   ├── handler/  HTTP 处理器
-│   │   ├── middleware/ 中间件（JWT、限流、日志）
-│   │   ├── model/    数据模型
-│   │   ├── service/  业务逻辑
-│   │   └── utils/    工具
+│   │   ├── config/      配置
+│   │   ├── database/    数据库连接与迁移
+│   │   ├── handler/     HTTP 处理器
+│   │   ├── middleware/  中间件（JWT、限流、日志）
+│   │   ├── model/       数据模型
+│   │   ├── service/     业务逻辑
+│   │   └── utils/       工具
 │   └── Dockerfile
-├── web/              Vue 3 前端
+├── web/                 Vue 3 前端
 │   └── src/
-│       ├── api/      API 客户端
-│       ├── views/    页面组件
-│       └── router/   路由
-├── admin/            Vue 3 后台管理
+│       ├── api/         API 客户端
+│       ├── views/       页面组件
+│       ├── components/  公共组件
+│       └── router/      路由
+├── admin/               Vue 3 后台管理
 │   └── src/
-│       ├── views/    管理页面
-│       └── components/ 面板组件
+│       ├── views/       管理页面
+│       └── components/  面板组件
+├── qdrant/              Qdrant 向量数据库（本地）
+├── docs/                设计和实现文档
 └── docker-compose.yml
 ```
 
