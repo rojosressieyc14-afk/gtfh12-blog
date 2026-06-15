@@ -30,7 +30,7 @@ func (h *MetaHandler) CreateCategory(c *gin.Context) {
 	var payload struct {
 		Name string `json:"name"`
 	}
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -53,7 +53,7 @@ func (h *MetaHandler) UpdateCategory(c *gin.Context) {
 	var payload struct {
 		Name string `json:"name"`
 	}
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -93,7 +93,7 @@ func (h *MetaHandler) CreateTag(c *gin.Context) {
 	var payload struct {
 		Name string `json:"name"`
 	}
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -116,7 +116,7 @@ func (h *MetaHandler) UpdateTag(c *gin.Context) {
 	var payload struct {
 		Name string `json:"name"`
 	}
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}

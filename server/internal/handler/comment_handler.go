@@ -30,7 +30,7 @@ func (h *CommentHandler) List(c *gin.Context) {
 func (h *CommentHandler) Create(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var payload service.CommentPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}

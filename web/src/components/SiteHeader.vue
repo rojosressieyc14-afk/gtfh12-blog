@@ -17,30 +17,17 @@
 
     <nav class="site-nav">
       <router-link to="/">首页</router-link>
-      <router-link to="/about">关于</router-link>
       <router-link to="/articles">文章</router-link>
       <router-link to="/projects">项目</router-link>
       <router-link to="/interview">AI 面试官</router-link>
-      <router-link to="/editor">写文章</router-link>
-      <router-link v-if="userStore.isLoggedIn" to="/my-articles">我的文章</router-link>
-      <router-link v-if="userStore.isLoggedIn" to="/my-projects">我的项目</router-link>
-      <router-link v-if="userStore.isLoggedIn" to="/collections">收藏夹</router-link>
-      <router-link v-if="userStore.isLoggedIn" to="/notifications">通知</router-link>
-      <router-link v-if="userStore.isLoggedIn" to="/profile">个人资料</router-link>
     </nav>
 
     <div class="site-header__actions">
-      <a
-        v-if="userStore.isLoggedIn && userStore.profile?.role === 'admin'"
-        class="ghost-btn"
-        href="/PulseBlog/admin/"
-        target="_blank"
-        rel="noreferrer"
-      >
-        后台管理
-      </a>
-      <router-link v-if="!userStore.isLoggedIn" class="solid-btn" to="/auth">登录 / 注册</router-link>
-      <button v-else class="ghost-btn" @click="logout">{{ userStore.profile?.username }} | 退出登录</button>
+      <template v-if="userStore.isLoggedIn">
+        <router-link class="ghost-btn" to="/user-center">个人中心</router-link>
+        <button class="ghost-btn" @click="logout">退出</button>
+      </template>
+      <router-link v-else class="solid-btn" to="/auth">登录 / 注册</router-link>
     </div>
 
     <button class="hamburger-btn" :class="{ 'hamburger-btn--active': mobileOpen }" @click="toggleMobile" aria-label="菜单">
@@ -52,18 +39,12 @@
       <aside class="mobile-drawer" :class="{ 'mobile-drawer--open': mobileOpen }">
         <nav class="mobile-drawer__nav" @click="mobileOpen = false">
           <router-link to="/">首页</router-link>
-          <router-link to="/about">关于</router-link>
           <router-link to="/articles">文章</router-link>
           <router-link to="/projects">项目</router-link>
           <router-link to="/interview">AI 面试官</router-link>
-          <router-link to="/editor">写文章</router-link>
-          <router-link v-if="userStore.isLoggedIn" to="/my-articles">我的文章</router-link>
-          <router-link v-if="userStore.isLoggedIn" to="/my-projects">我的项目</router-link>
-          <router-link v-if="userStore.isLoggedIn" to="/collections">收藏夹</router-link>
-          <router-link v-if="userStore.isLoggedIn" to="/notifications">通知</router-link>
-          <router-link v-if="userStore.isLoggedIn" to="/profile">个人资料</router-link>
           <hr v-if="userStore.isLoggedIn" />
-          <a v-if="userStore.isLoggedIn && userStore.profile?.role === 'admin'" href="/PulseBlog/admin/" target="_blank" rel="noreferrer">后台管理</a>
+          <router-link v-if="userStore.isLoggedIn" to="/user-center">个人中心</router-link>
+          <a v-if="userStore.isLoggedIn && userStore.profile?.role === 'admin'" :href="adminUrl" target="_blank" rel="noreferrer">后台管理</a>
           <router-link v-if="!userStore.isLoggedIn" to="/auth">登录 / 注册</router-link>
           <button v-else class="mobile-logout" @click="logout">退出登录</button>
         </nav>
@@ -73,13 +54,17 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "../stores/user";
 
 const router = useRouter();
 const userStore = useUserStore();
 const mobileOpen = ref(false);
+
+const adminUrl = computed(() => {
+  return import.meta.env.VITE_ADMIN_URL || "/PulseBlog/admin/";
+});
 
 function toggleMobile() {
   mobileOpen.value = !mobileOpen.value;

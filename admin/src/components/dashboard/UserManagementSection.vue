@@ -35,6 +35,9 @@
           <button class="role-btn" @click="toggleStatus(item)">
             {{ item.status === "banned" ? "解除封禁" : "封禁用户" }}
           </button>
+          <button class="role-btn role-btn--danger" @click="handleDelete(item)">
+            删除用户
+          </button>
         </div>
       </article>
     </div>
@@ -49,7 +52,7 @@
 
 <script setup>
 import { computed, ref } from "vue";
-import { getUsers, updateUserRole, updateUserStatus } from "../../api/dashboard";
+import { getUsers, updateUserRole, updateUserStatus, deleteUser } from "../../api/dashboard";
 
 const emit = defineEmits(["flash"]);
 
@@ -110,6 +113,17 @@ async function toggleStatus(item) {
   }
 }
 
+async function handleDelete(item) {
+  if (!window.confirm(`确定要永久删除用户「${item.username}」吗？此操作不可撤销！`)) return;
+  try {
+    await deleteUser(item.id);
+    await loadUsers();
+    say("用户已删除。");
+  } catch (error) {
+    say(error?.response?.data?.message || error?.message || "删除用户失败。");
+  }
+}
+
 loadUsers();
 </script>
 
@@ -120,6 +134,16 @@ loadUsers();
 
 .reject-note {
   color: #ffd2d2;
+}
+
+.role-btn--danger {
+  border-color: rgba(255, 80, 80, 0.3);
+  color: #ff6b6b;
+}
+
+.role-btn--danger:hover {
+  background: rgba(255, 80, 80, 0.15);
+  border-color: rgba(255, 80, 80, 0.5);
 }
 
 @media (max-width: 768px) {

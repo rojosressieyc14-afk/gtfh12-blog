@@ -32,7 +32,19 @@
           </div>
         </label>
 
-        <button class="start-btn" :disabled="!position || starting" @click="startInterview">
+        <div class="setup-field" v-if="apiKeys.length">
+          <span>API Key <span class="field-hint">（可选，使用自己的 AI 接口）</span></span>
+          <label class="switch-row">
+            <input type="checkbox" v-model="useOwnKey" />
+            <span>使用自己的 API Key</span>
+          </label>
+          <select v-if="useOwnKey" v-model="selectedApiKeyId" class="setup-input">
+            <option :value="null">请选择...</option>
+            <option v-for="k in apiKeys" :key="k.id" :value="k.id">{{ k.provider }} - {{ k.keyPrefix }}</option>
+          </select>
+        </div>
+
+        <button class="start-btn" :disabled="!position || starting || (useOwnKey && !selectedApiKeyId)" @click="startInterview">
           {{ starting ? "准备中..." : "开始面试" }}
         </button>
       </div>
@@ -139,9 +151,10 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { startInterview as apiStartInterview, submitAnswer, getSession, endSession } from "../api/interview";
+import { listApiKeys } from "../api/apiKey";
 
 const router = useRouter();
 const chatRef = ref(null);
@@ -152,6 +165,9 @@ const position = ref("");
 const resumeText = ref("");
 const totalQuestions = ref(5);
 const starting = ref(false);
+const apiKeys = ref([]);
+const selectedApiKeyId = ref(null);
+const useOwnKey = ref(false);
 const submitting = ref(false);
 const agentThinking = ref(false);
 const messages = ref([]);
@@ -214,7 +230,8 @@ async function startInterview() {
     const { data } = await apiStartInterview({
       position: position.value.trim(),
       resumeText: resumeText.value.trim(),
-      totalQuestions: totalQuestions.value
+      totalQuestions: totalQuestions.value,
+      apiKeyId: useOwnKey.value ? selectedApiKeyId.value : null
     });
     sessionId.value = data.item.id;
     rounds.value = data.item.rounds || [];
@@ -413,6 +430,15 @@ watch(messages, () => {
 }, { deep: true });
 
 initSpeech();
+
+async function loadApiKeys() {
+  try {
+    const { data } = await listApiKeys();
+    apiKeys.value = data.items || [];
+  } catch {}
+}
+
+onMounted(loadApiKeys);
 onBeforeUnmount(() => {
   if (recognition) {
     recognition.stop();

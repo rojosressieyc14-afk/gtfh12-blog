@@ -41,6 +41,10 @@ func Migrate(db *gorm.DB) error {
 		&model.AIReviewRecord{},
 		&model.InterviewSession{},
 		&model.InterviewRound{},
+		&model.KnowledgeBase{},
+		&model.KnowledgeDocument{},
+		&model.KbDocumentTag{},
+		&model.UserApiKey{},
 	)
 }
 

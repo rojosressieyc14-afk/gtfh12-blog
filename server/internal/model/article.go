@@ -23,6 +23,7 @@ type Article struct {
 	Category     *Category  `json:"category"`
 	Tags         []Tag      `gorm:"many2many:article_tags;" json:"tags"`
 	Comments     []Comment  `json:"comments,omitempty"`
+	IsPrivate    bool       `gorm:"not null;default:false" json:"isPrivate"`
 	ViewCount    int64      `gorm:"not null;default:0" json:"viewCount"`
 	LikesCount   int64      `gorm:"-" json:"likesCount"`
 	FavoritesCount int64    `gorm:"-" json:"favoritesCount"`

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"blog/server/internal/middleware"
 	"blog/server/internal/model"
@@ -11,6 +12,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
+
+func safeBindJSON(c *gin.Context, obj interface{}) error {
+	if err := c.ShouldBindJSON(obj); err != nil {
+		if strings.Contains(err.Error(), "invalid character") || strings.Contains(err.Error(), "unexpected end") {
+			return errors.New("请求数据格式异常，请检查提交内容中是否有特殊字符或尝试刷新后重试")
+		}
+		return err
+	}
+	return nil
+}
 
 type ArticleHandler struct {
 	articleService *service.ArticleService
@@ -78,6 +89,10 @@ func (h *ArticleHandler) Detail(c *gin.Context) {
 	}
 
 	authUser := middleware.GetAuthUser(c)
+	if article.IsPrivate && (authUser == nil || (authUser.Role != model.RoleAdmin && authUser.ID != article.AuthorID)) {
+		c.JSON(http.StatusForbidden, gin.H{"message": "文章暂未公开"})
+		return
+	}
 	if article.Status != model.ArticlePublished && (authUser == nil || (authUser.Role != model.RoleAdmin && authUser.ID != article.AuthorID)) {
 		c.JSON(http.StatusForbidden, gin.H{"message": "文章暂未公开"})
 		return
@@ -88,7 +103,7 @@ func (h *ArticleHandler) Detail(c *gin.Context) {
 
 func (h *ArticleHandler) Create(c *gin.Context) {
 	var payload service.ArticlePayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -111,7 +126,7 @@ func (h *ArticleHandler) Update(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
 	var payload service.ArticlePayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}

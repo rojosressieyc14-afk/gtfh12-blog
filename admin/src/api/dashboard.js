@@ -8,6 +8,7 @@ export const reviewProject = (id, payload) => client.post(`/admin/projects/${id}
 export const getUsers = (params = {}) => client.get("/admin/users", { params });
 export const updateUserRole = (id, payload) => client.put(`/admin/users/${id}/role`, payload);
 export const updateUserStatus = (id, payload) => client.put(`/admin/users/${id}/status`, payload);
+export const deleteUser = (id) => client.delete(`/admin/users/${id}`);
 export const getAdminArticles = (params = {}) => client.get("/admin/articles", { params });
 export const getAdminArticleDetail = (id) => client.get(`/admin/articles/${id}`);
 export const updateAdminArticleTaxonomy = (id, payload) => client.put(`/admin/articles/${id}/taxonomy`, payload);

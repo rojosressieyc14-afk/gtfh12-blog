@@ -20,6 +20,17 @@ services:
     networks:
       - app-network
 
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: pulseblog-qdrant
+    restart: unless-stopped
+    expose:
+      - "6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - app-network
+
   api:
     build:
       context: ./server
@@ -29,6 +40,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      qdrant:
+        condition: service_started
     environment:
       SERVER_PORT: "8080"
       DB_HOST: db
@@ -44,6 +57,8 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS-}
       GIN_MODE: ${GIN_MODE-release}
       UPLOAD_DIR: /app/uploads
+      QDRANT_ADDR: http://qdrant:6333
+      API_ENCRYPTION_KEY: ${API_ENCRYPTION_KEY-}
     expose:
       - "8080"
     volumes:
@@ -69,6 +84,7 @@ services:
 volumes:
   db_data:
   upload_data:
+  qdrant_data:
 
 networks:
   app-network:

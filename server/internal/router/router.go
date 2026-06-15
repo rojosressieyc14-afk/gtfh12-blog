@@ -42,6 +42,7 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 	adminService := service.NewAdminService(db, cfg)
 	notificationService := service.NewNotificationService(db)
 	aiReviewService := service.NewAIReviewService(db)
+	userCenterService := service.NewUserCenterService(db)
 
 	authHandler := handler.NewAuthHandler(authService)
 	articleHandler := handler.NewArticleHandler(articleService)
@@ -52,7 +53,20 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 	uploadHandler := handler.NewUploadHandler(cfg)
 	notificationHandler := handler.NewNotificationHandler(notificationService)
 	aiReviewHandler := handler.NewAIReviewHandler(aiReviewService)
-	interviewHandler := handler.NewInterviewHandler(service.NewInterviewService(db, cfg))
+	userCenterHandler := handler.NewUserCenterHandler(userCenterService)
+
+	var apiKeyService *service.ApiKeyService
+	var apiKeyHandler *handler.ApiKeyHandler
+	if encService, err := service.NewEncryptionService(cfg.APIEncryptionKey); err == nil {
+		apiKeyService = service.NewApiKeyService(db, encService)
+		apiKeyHandler = handler.NewApiKeyHandler(apiKeyService)
+	}
+
+	interviewHandler := handler.NewInterviewHandler(service.NewInterviewService(db, cfg, apiKeyService))
+
+	embeddingProvider := service.NewDeepSeekEmbedding(cfg.DeepSeekKey, cfg.DeepSeekURL)
+	kbService := service.NewKnowledgeBaseService(db, cfg.QdrantAddr, cfg.QdrantAPIKey, embeddingProvider)
+	kbHandler := handler.NewKnowledgeBaseHandler(kbService)
 
 	r.Static("/uploads", cfg.UploadDir)
 
@@ -66,6 +80,7 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 		api.POST("/auth/login", middleware.RateLimit(loginLimiter), authHandler.Login)
 		api.GET("/authors/recommended", authHandler.RecommendedAuthors)
 		api.GET("/authors/:id", authHandler.AuthorProfile)
+		api.GET("/kb-notes/:id", kbHandler.GetPublicNote)
 		api.GET("/metadata", metaHandler.List)
 		api.GET("/articles", articleHandler.ListPublished)
 		api.GET("/articles/trending", articleHandler.Trending)
@@ -100,6 +115,25 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 		api.POST("/interview/:id/answer", middleware.RequireAuth(), interviewHandler.Answer)
 		api.GET("/interview/:id", middleware.RequireAuth(), interviewHandler.Get)
 		api.POST("/interview/:id/end", middleware.RequireAuth(), interviewHandler.End)
+
+		api.POST("/knowledge-bases", middleware.RequireAuth(), kbHandler.Create)
+		api.GET("/knowledge-bases", middleware.RequireAuth(), kbHandler.List)
+		api.GET("/knowledge-bases/:id", middleware.RequireAuth(), kbHandler.Get)
+		api.DELETE("/knowledge-bases/:id", middleware.RequireAuth(), kbHandler.Delete)
+		api.POST("/knowledge-bases/:id/documents", middleware.RequireAuth(), kbHandler.AddDocument)
+		api.PUT("/knowledge-bases/:id/documents/:docId", middleware.RequireAuth(), kbHandler.UpdateDocument)
+		api.GET("/knowledge-bases/:id/documents", middleware.RequireAuth(), kbHandler.ListDocuments)
+		api.DELETE("/knowledge-bases/:id/documents/:docId", middleware.RequireAuth(), kbHandler.DeleteDocument)
+		api.POST("/knowledge-bases/:id/query", middleware.RequireAuth(), kbHandler.Query)
+
+		if apiKeyHandler != nil {
+			api.GET("/user/api-keys", middleware.RequireAuth(), apiKeyHandler.List)
+			api.POST("/user/api-keys", middleware.RequireAuth(), apiKeyHandler.Create)
+			api.DELETE("/user/api-keys/:id", middleware.RequireAuth(), apiKeyHandler.Delete)
+		}
+
+		api.GET("/user-center/stats", middleware.RequireAuth(), userCenterHandler.GetStats)
+		api.GET("/user-center/recent-activity", middleware.RequireAuth(), userCenterHandler.GetRecentActivity)
 
 		admin := api.Group("/admin")
 		admin.Use(middleware.RequireAuth(), middleware.RequireAdmin())
@@ -139,6 +173,7 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 			admin.DELETE("/sensitive-words/:id", adminHandler.DeleteSensitiveWord)
 			admin.PUT("/users/:id/role", adminHandler.UpdateUserRole)
 			admin.PUT("/users/:id/status", adminHandler.UpdateUserStatus)
+			admin.DELETE("/users/:id", adminHandler.DeleteUser)
 			admin.POST("/categories", metaHandler.CreateCategory)
 			admin.PUT("/categories/:id", metaHandler.UpdateCategory)
 			admin.DELETE("/categories/:id", metaHandler.DeleteCategory)

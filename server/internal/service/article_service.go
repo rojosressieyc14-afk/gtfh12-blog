@@ -17,6 +17,7 @@ type ArticlePayload struct {
 	CoverImage string   `json:"coverImage"`
 	CategoryID *uint    `json:"categoryId"`
 	Tags       []string `json:"tags"`
+	IsPrivate  bool     `json:"isPrivate"`
 }
 
 type ReviewPayload struct {
@@ -88,6 +89,7 @@ func (s *ArticleService) Create(authorID uint, role string, payload ArticlePaylo
 		Status:     model.ArticleDraft,
 		AuthorID:   authorID,
 		CategoryID: payload.CategoryID,
+		IsPrivate:  payload.IsPrivate,
 	}
 
 	if err := s.db.Create(&article).Error; err != nil {
@@ -131,6 +133,7 @@ func (s *ArticleService) Update(articleID, userID uint, role string, payload Art
 		"content":       payload.Content,
 		"cover_image":   payload.CoverImage,
 		"category_id":   payload.CategoryID,
+		"is_private":    payload.IsPrivate,
 		"reject_reason": "",
 	}
 	if article.Status == model.ArticleRejected {
@@ -191,8 +194,9 @@ func (s *ArticleService) Submit(articleID, userID uint, role string) (*model.Art
 		_ = s.db.Model(&article).Updates(map[string]interface{}{"status": model.ArticleRejected, "reject_reason": reason}).Error
 		return s.GetByID(articleID, userID)
 	}
-	if role == model.RoleAdmin {
-		now := time.Now()
+	now := time.Now()
+
+	if role == model.RoleAdmin || article.IsPrivate {
 		if err := s.db.Model(&article).Updates(map[string]interface{}{
 			"status":        model.ArticlePublished,
 			"published_at":  &now,
@@ -217,8 +221,8 @@ func (s *ArticleService) ListPublished(filter PublishedArticleFilter) ([]model.A
 	var total int64
 	pagination := normalizePagination(filter.Page, filter.PageSize)
 	query := s.baseArticleQuery().
-		Where("articles.status = ?", model.ArticlePublished)
-	countQuery := s.db.Model(&model.Article{}).Where("articles.status = ?", model.ArticlePublished)
+		Where("articles.status = ? AND articles.is_private = ?", model.ArticlePublished, false)
+	countQuery := s.db.Model(&model.Article{}).Where("articles.status = ? AND articles.is_private = ?", model.ArticlePublished, false)
 	if filter.Keyword != "" {
 		query = query.Where("articles.title LIKE ? OR articles.summary LIKE ?", "%"+filter.Keyword+"%", "%"+filter.Keyword+"%")
 		countQuery = countQuery.Where("articles.title LIKE ? OR articles.summary LIKE ?", "%"+filter.Keyword+"%", "%"+filter.Keyword+"%")
@@ -276,7 +280,7 @@ func (s *ArticleService) ListTrending(limit int) ([]model.Article, error) {
 	}
 	var articles []model.Article
 	err := s.baseArticleQuery().
-		Where("status = ?", model.ArticlePublished).
+		Where("status = ? AND is_private = ?", model.ArticlePublished, false).
 		Order("published_at desc, created_at desc").
 		Limit(limit).
 		Find(&articles).Error
@@ -365,7 +369,7 @@ func (s *ArticleService) GetByID(articleID uint, viewerID uint) (*model.Article,
 	if err := s.baseArticleQuery().Preload("Comments.User").First(&article, articleID).Error; err != nil {
 		return nil, err
 	}
-	if article.Status == model.ArticlePublished {
+	if article.Status == model.ArticlePublished && !article.IsPrivate {
 		_ = s.db.Model(&article).UpdateColumn("view_count", gorm.Expr("view_count + ?", 1)).Error
 		article.ViewCount++
 	}
@@ -583,7 +587,7 @@ func (s *ArticleService) toggleReaction(articleID, userID uint, kind string) (*R
 	if err := s.db.First(&article, articleID).Error; err != nil {
 		return nil, err
 	}
-	if article.Status != model.ArticlePublished {
+	if article.Status != model.ArticlePublished || article.IsPrivate {
 		return nil, ErrNotPublishedArticle
 	}
 

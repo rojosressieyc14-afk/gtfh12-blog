@@ -24,6 +24,7 @@ type ProjectPayload struct {
 	Results    []string `json:"results"`
 	DemoURL    string   `json:"demoUrl"`
 	RepoURL    string   `json:"repoUrl"`
+	IsPrivate  bool     `json:"isPrivate"`
 	IsFeatured bool     `json:"isFeatured"`
 	SortOrder  int      `json:"sortOrder"`
 }
@@ -56,8 +57,8 @@ func (s *ProjectService) ListPublished(filter ProjectFilter) ([]model.Project, P
 	var total int64
 	pagination := normalizePagination(filter.Page, filter.PageSize)
 
-	query := s.db.Model(&model.Project{}).Preload("Author").Where("status = ?", model.ProjectPublished)
-	countQuery := s.db.Model(&model.Project{}).Where("status = ?", model.ProjectPublished)
+	query := s.db.Model(&model.Project{}).Preload("Author").Where("status = ? AND is_private = ?", model.ProjectPublished, false)
+	countQuery := s.db.Model(&model.Project{}).Where("status = ? AND is_private = ?", model.ProjectPublished, false)
 
 	if filter.FeaturedOnly {
 		query = query.Where("is_featured = ?", true)
@@ -126,6 +127,9 @@ func (s *ProjectService) GetByID(projectID, viewerID uint, role string) (*model.
 	if err := s.db.Preload("Author").First(&item, projectID).Error; err != nil {
 		return nil, err
 	}
+	if item.IsPrivate && role != model.RoleAdmin && item.AuthorID != viewerID {
+		return nil, ErrProjectNotPublished
+	}
 	if item.Status != model.ProjectPublished && role != model.RoleAdmin && item.AuthorID != viewerID {
 		return nil, ErrProjectNotPublished
 	}
@@ -146,6 +150,7 @@ func (s *ProjectService) Create(authorID uint, role string, payload ProjectPaylo
 	}
 
 	item.Status = model.ProjectDraft
+	item.IsPrivate = payload.IsPrivate
 	item.IsFeatured = payload.IsFeatured && role == model.RoleAdmin
 	item.SortOrder = payload.SortOrder
 	item.AuthorID = authorID
@@ -184,6 +189,7 @@ func (s *ProjectService) Update(projectID, userID uint, role string, payload Pro
 		"results":       normalizeStringList(payload.Results),
 		"demo_url":      strings.TrimSpace(payload.DemoURL),
 		"repo_url":      strings.TrimSpace(payload.RepoURL),
+		"is_private":    payload.IsPrivate,
 		"reject_reason": "",
 	}
 
@@ -234,8 +240,8 @@ func (s *ProjectService) Submit(projectID, userID uint, role string) (*model.Pro
 	updates := map[string]any{
 		"reject_reason": "",
 	}
-	if role == model.RoleAdmin {
-		now := time.Now()
+	now := time.Now()
+	if role == model.RoleAdmin || item.IsPrivate {
 		updates["status"] = model.ProjectPublished
 		updates["published_at"] = &now
 	} else {

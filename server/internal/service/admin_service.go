@@ -843,6 +843,39 @@ func (s *AdminService) UpdateUserStatus(userID uint, status string) (*model.User
 	return &user, nil
 }
 
+func (s *AdminService) DeleteUser(userID uint) error {
+	var user model.User
+	if err := s.db.First(&user, userID).Error; err != nil {
+		return err
+	}
+	if user.Role == model.RoleAdmin {
+		var adminCount int64
+		if err := s.db.Model(&model.User{}).Where("role = ? AND status = ?", model.RoleAdmin, model.UserActive).Count(&adminCount).Error; err != nil {
+			return err
+		}
+		if adminCount <= 1 {
+			return ErrLastAdminDelete
+		}
+	}
+
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		tx.Where("author_id = ?", userID).Delete(&model.Article{})
+		var commentIDs []uint
+		tx.Model(&model.Comment{}).Where("user_id = ?", userID).Pluck("id", &commentIDs)
+		if len(commentIDs) > 0 {
+			tx.Where("parent_id IN ?", commentIDs).Delete(&model.Comment{})
+		}
+		tx.Where("user_id = ?", userID).Delete(&model.Comment{})
+		tx.Where("user_id = ?", userID).Delete(&model.ArticleLike{})
+		tx.Where("user_id = ?", userID).Delete(&model.ArticleFavorite{})
+		tx.Where("user_id = ?", userID).Delete(&model.ModerationHit{})
+		tx.Where("operator_id = ?", userID).Delete(&model.OperationLog{})
+		tx.Where("user_id = ?", userID).Delete(&model.Notification{})
+		tx.Where("author_id = ?", userID).Delete(&model.Project{})
+		return tx.Delete(&user).Error
+	})
+}
+
 func (s *AdminService) DeleteComment(commentID uint) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		var count int64

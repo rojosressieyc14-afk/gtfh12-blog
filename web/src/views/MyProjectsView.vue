@@ -27,6 +27,7 @@
             <p class="table-note">{{ formatDate(item.updatedAt) }}</p>
           </div>
           <span class="status-chip" :class="item.status">{{ labelMap[item.status] || item.status }}</span>
+          <span v-if="item.isPrivate" class="privacy-badge">私有</span>
         </div>
 
         <p class="detail-summary">{{ item.summary || "暂无摘要" }}</p>
@@ -141,6 +142,16 @@ onMounted(loadMine);
   margin-top: 12px;
   color: #fecaca;
   font-size: 0.92rem;
+}
+
+.privacy-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255, 217, 142, 0.16);
+  color: #ffd98e;
 }
 
 .delete-link {

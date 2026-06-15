@@ -25,8 +25,9 @@ func (h *InterviewHandler) Start(c *gin.Context) {
 		Position       string `json:"position"`
 		ResumeText     string `json:"resumeText"`
 		TotalQuestions int    `json:"totalQuestions"`
+		ApiKeyID       *uint  `json:"apiKeyId"`
 	}
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "请求参数无效"})
 		return
 	}
@@ -42,7 +43,7 @@ func (h *InterviewHandler) Start(c *gin.Context) {
 
 	payload.ResumeText = strings.TrimSpace(payload.ResumeText)
 
-	session, err := h.svc.StartSession(authUser.ID, payload.Position, payload.ResumeText, payload.TotalQuestions)
+	session, err := h.svc.StartSession(authUser.ID, payload.Position, payload.ResumeText, payload.TotalQuestions, payload.ApiKeyID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
@@ -63,7 +64,7 @@ func (h *InterviewHandler) Answer(c *gin.Context) {
 	var payload struct {
 		Answer string `json:"answer"`
 	}
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "请求参数无效"})
 		return
 	}

@@ -152,11 +152,48 @@ func (m *moderationService) findSensitiveWord(text string) string {
 	}
 
 	for _, word := range words {
-		if strings.Contains(normalized, word) {
+		count := strings.Count(normalized, word)
+		if count == 0 {
+			continue
+		}
+		if count > 1 {
+			return word
+		}
+		if isStandaloneWord(normalized, word) {
 			return word
 		}
 	}
 	return ""
+}
+
+func isStandaloneWord(text, word string) bool {
+	tr := []rune(text)
+	wr := []rune(word)
+	if len(wr) == 0 {
+		return false
+	}
+	for i := 0; i <= len(tr)-len(wr); i++ {
+		match := true
+		for j := 0; j < len(wr); j++ {
+			if tr[i+j] != wr[j] {
+				match = false
+				break
+			}
+		}
+		if !match {
+			continue
+		}
+		beforeOK := i == 0 || !isWordRune(tr[i-1])
+		afterOK := i+len(wr) >= len(tr) || !isWordRune(tr[i+len(wr)])
+		if beforeOK && afterOK {
+			return true
+		}
+	}
+	return false
+}
+
+func isWordRune(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r)
 }
 
 func (m *moderationService) setCustomWords(words []string) {

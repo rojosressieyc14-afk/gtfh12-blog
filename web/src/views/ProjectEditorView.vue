@@ -143,6 +143,16 @@
           </label>
         </div>
 
+        <div class="privacy-toggle">
+          <label class="toggle-label">
+            <span>可见范围</span>
+            <div class="toggle-group">
+              <button type="button" class="toggle-btn" :class="{ active: !form.isPrivate }" @click="form.isPrivate = false">公开发布</button>
+              <button type="button" class="toggle-btn" :class="{ active: form.isPrivate }" @click="form.isPrivate = true">仅自己可见</button>
+            </div>
+          </label>
+        </div>
+
         <label>
           项目正文
           <textarea
@@ -249,6 +259,7 @@ const form = reactive({
   demoUrl: "",
   repoUrl: "",
   sortOrder: 0,
+  isPrivate: false,
   isFeatured: false
 });
 
@@ -319,6 +330,10 @@ function buildPayload() {
   };
 }
 
+function privacyLabel() {
+  return form.isPrivate ? "仅自己可见" : "公开发布";
+}
+
 function parseInputList(value) {
   return value
     .split(/[,\n]/)
@@ -345,6 +360,7 @@ async function loadDetail() {
     demoUrl: data.item.demoUrl || "",
     repoUrl: data.item.repoUrl || "",
     sortOrder: data.item.sortOrder || 0,
+    isPrivate: Boolean(data.item.isPrivate),
     isFeatured: Boolean(data.item.isFeatured)
   });
   syncStatus(data.item);
@@ -520,6 +536,36 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.7;
   transform: none;
+}
+
+.privacy-toggle {
+  margin-bottom: 16px;
+}
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.toggle-group {
+  display: flex;
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(255,255,255,0.12));
+  overflow: hidden;
+}
+.toggle-btn {
+  padding: 8px 16px;
+  border: none;
+  background: rgba(255,255,255,0.04);
+  color: var(--soft, rgba(242,239,232,0.7));
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.88rem;
+  transition: all 0.2s;
+}
+.toggle-btn.active {
+  background: linear-gradient(135deg, #ffd98e, #ffa64d);
+  color: #24170c;
+  font-weight: 600;
 }
 
 @media (max-width: 960px) {

@@ -28,6 +28,7 @@ type Project struct {
 	RepoURL      string     `gorm:"size:255" json:"repoUrl"`
 	Status       string     `gorm:"size:20;index;not null;default:draft" json:"status"`
 	RejectReason string     `gorm:"size:255" json:"rejectReason"`
+	IsPrivate    bool       `gorm:"not null;default:false" json:"isPrivate"`
 	IsFeatured   bool       `gorm:"not null;default:false" json:"isFeatured"`
 	SortOrder    int        `gorm:"not null;default:0" json:"sortOrder"`
 	AuthorID     uint       `gorm:"index;not null" json:"authorId"`

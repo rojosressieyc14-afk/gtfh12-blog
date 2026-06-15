@@ -73,7 +73,7 @@ func (h *AdminHandler) ProjectDetail(c *gin.Context) {
 func (h *AdminHandler) ReviewArticle(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var payload service.ReviewPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -240,7 +240,7 @@ func (h *AdminHandler) UpdateUserRole(c *gin.Context) {
 	var payload struct {
 		Role string `json:"role"`
 	}
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -261,7 +261,7 @@ func (h *AdminHandler) UpdateUserStatus(c *gin.Context) {
 	var payload struct {
 		Status string `json:"status"`
 	}
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -275,6 +275,18 @@ func (h *AdminHandler) UpdateUserStatus(c *gin.Context) {
 		_ = h.adminService.CreateOperationLog(authUser.ID, "update_user_status", "user", item.ID, "修改用户状态为 "+payload.Status)
 	}
 	c.JSON(http.StatusOK, gin.H{"item": item})
+}
+
+func (h *AdminHandler) DeleteUser(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	if err := h.adminService.DeleteUser(uint(id)); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	if authUser := middleware.GetAuthUser(c); authUser != nil {
+		_ = h.adminService.CreateOperationLog(authUser.ID, "delete_user", "user", uint(id), "删除用户")
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "用户已删除"})
 }
 
 func (h *AdminHandler) DeleteArticle(c *gin.Context) {
@@ -292,7 +304,7 @@ func (h *AdminHandler) DeleteArticle(c *gin.Context) {
 func (h *AdminHandler) UpdateArticleTaxonomy(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var payload service.ArticleTaxonomyPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -314,7 +326,7 @@ func (h *AdminHandler) UpdateArticleTaxonomy(c *gin.Context) {
 
 func (h *AdminHandler) BulkUpdateArticleTaxonomy(c *gin.Context) {
 	var payload service.BulkArticleTaxonomyPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -336,7 +348,7 @@ func (h *AdminHandler) BulkUpdateArticleTaxonomy(c *gin.Context) {
 
 func (h *AdminHandler) BulkPublishArticles(c *gin.Context) {
 	var payload service.BulkArticleIDsPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -358,7 +370,7 @@ func (h *AdminHandler) BulkPublishArticles(c *gin.Context) {
 
 func (h *AdminHandler) BulkDeleteArticles(c *gin.Context) {
 	var payload service.BulkArticleIDsPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -380,7 +392,7 @@ func (h *AdminHandler) BulkDeleteArticles(c *gin.Context) {
 
 func (h *AdminHandler) BulkRejectArticles(c *gin.Context) {
 	var payload service.BulkArticleRejectPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -403,7 +415,7 @@ func (h *AdminHandler) BulkRejectArticles(c *gin.Context) {
 
 func (h *AdminHandler) BulkApproveArticles(c *gin.Context) {
 	var payload service.BulkArticleIDsPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -465,7 +477,7 @@ func (h *AdminHandler) ForcePublishProject(c *gin.Context) {
 func (h *AdminHandler) ReviewProject(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var payload service.ProjectReviewPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -503,7 +515,7 @@ func (h *AdminHandler) ReviewProject(c *gin.Context) {
 
 func (h *AdminHandler) BulkReviewProjects(c *gin.Context) {
 	var payload service.BulkProjectReviewPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -527,7 +539,7 @@ func (h *AdminHandler) BulkReviewProjects(c *gin.Context) {
 func (h *AdminHandler) UpdateProjectMeta(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var payload service.ProjectMetaPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -571,7 +583,7 @@ func (h *AdminHandler) SensitiveWords(c *gin.Context) {
 
 func (h *AdminHandler) CreateSensitiveWord(c *gin.Context) {
 	var payload service.SensitiveWordPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -625,7 +637,7 @@ func (h *AdminHandler) GetModerationSettings(c *gin.Context) {
 
 func (h *AdminHandler) UpdateModerationSettings(c *gin.Context) {
 	var payload service.ModerationSettingPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}

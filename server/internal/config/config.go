@@ -27,6 +27,9 @@ type Config struct {
 	UploadDir    string
 	DeepSeekKey  string
 	DeepSeekURL  string
+	QdrantAddr    string
+	QdrantAPIKey  string
+	APIEncryptionKey string
 }
 
 func Load() Config {
@@ -51,6 +54,9 @@ func Load() Config {
 		UploadDir:    getEnv("UPLOAD_DIR", "./uploads"),
 		DeepSeekKey:  getEnv("DEEPSEEK_API_KEY", ""),
 		DeepSeekURL:  getEnv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1"),
+		QdrantAddr:    getEnv("QDRANT_ADDR", "http://localhost:6333"),
+		QdrantAPIKey:  getEnv("QDRANT_API_KEY", ""),
+		APIEncryptionKey: getEnv("API_ENCRYPTION_KEY", ""),
 	}
 	cfg.normalize()
 	return cfg
@@ -89,6 +95,12 @@ func (cfg *Config) normalize() {
 	if cfg.DeepSeekURL == "" {
 		cfg.DeepSeekURL = "https://api.deepseek.com/v1"
 	}
+	cfg.QdrantAddr = strings.TrimSpace(cfg.QdrantAddr)
+	if cfg.QdrantAddr == "" {
+		cfg.QdrantAddr = "http://localhost:6333"
+	}
+	cfg.QdrantAPIKey = strings.TrimSpace(cfg.QdrantAPIKey)
+	cfg.APIEncryptionKey = strings.TrimSpace(cfg.APIEncryptionKey)
 }
 
 func (cfg Config) Validate() error {
@@ -120,6 +132,9 @@ func (cfg Config) Validate() error {
 
 func (cfg Config) GetDeepSeekKey() string { return cfg.DeepSeekKey }
 func (cfg Config) GetDeepSeekURL() string { return cfg.DeepSeekURL }
+func (cfg Config) GetQdrantAddr() string { return cfg.QdrantAddr }
+func (cfg Config) GetQdrantAPIKey() string { return cfg.QdrantAPIKey }
+func (cfg Config) GetAPIEncryptionKey() string { return cfg.APIEncryptionKey }
 
 func (cfg Config) StartupSummary() string {
 	return fmt.Sprintf(

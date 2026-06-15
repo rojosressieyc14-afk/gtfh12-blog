@@ -104,6 +104,16 @@
             <img :src="coverUrl" alt="文章封面" />
           </div>
 
+          <div class="privacy-toggle">
+            <label class="toggle-label">
+              <span>可见范围</span>
+              <div class="toggle-group">
+                <button type="button" class="toggle-btn" :class="{ active: !form.isPrivate }" @click="form.isPrivate = false">公开发布</button>
+                <button type="button" class="toggle-btn" :class="{ active: form.isPrivate }" @click="form.isPrivate = true">仅自己可见</button>
+              </div>
+            </label>
+          </div>
+
           <label>
             Markdown 正文
             <textarea
@@ -192,7 +202,8 @@ const form = reactive({
   summary: "",
   content: "",
   coverImage: "",
-  categoryId: null
+  categoryId: null,
+  isPrivate: false
 });
 
 const parsedTags = computed(() =>
@@ -241,6 +252,10 @@ function buildPayload() {
   };
 }
 
+function privacyLabel() {
+  return form.isPrivate ? "仅自己可见" : "公开发布";
+}
+
 function hasMeaningfulContent() {
   return Boolean(form.title.trim() || form.summary.trim() || form.content.trim() || form.coverImage || tagsInput.value.trim() || form.categoryId);
 }
@@ -274,7 +289,8 @@ function restoreLocalDraft() {
       summary: payload.summary || "",
       content: payload.content || "",
       coverImage: payload.coverImage || "",
-      categoryId: payload.categoryId || null
+      categoryId: payload.categoryId || null,
+      isPrivate: Boolean(payload.isPrivate)
     });
     tagsInput.value = Array.isArray(payload.tags) ? payload.tags.join(", ") : "";
     if (payload.savedAt) {
@@ -327,7 +343,8 @@ async function loadDetail() {
     summary: data.item.summary || "",
     content: data.item.content || "",
     coverImage: data.item.coverImage || "",
-    categoryId: data.item.categoryId || null
+    categoryId: data.item.categoryId || null,
+    isPrivate: Boolean(data.item.isPrivate)
   });
   tagsInput.value = data.item.tags?.map((item) => item.name).join(", ") || "";
   markClean();
@@ -580,6 +597,36 @@ onBeforeUnmount(() => {
   width: 100%;
   display: block;
   object-fit: cover;
+}
+
+.privacy-toggle {
+  margin-bottom: 16px;
+}
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.toggle-group {
+  display: flex;
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(255,255,255,0.12));
+  overflow: hidden;
+}
+.toggle-btn {
+  padding: 8px 16px;
+  border: none;
+  background: rgba(255,255,255,0.04);
+  color: var(--soft, rgba(242,239,232,0.7));
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.88rem;
+  transition: all 0.2s;
+}
+.toggle-btn.active {
+  background: linear-gradient(135deg, #ffd98e, #ffa64d);
+  color: #24170c;
+  font-weight: 600;
 }
 
 .editor-cover-preview img {

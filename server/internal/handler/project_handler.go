@@ -95,7 +95,7 @@ func (h *ProjectHandler) MineDetail(c *gin.Context) {
 
 func (h *ProjectHandler) Create(c *gin.Context) {
 	var payload service.ProjectPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -114,7 +114,7 @@ func (h *ProjectHandler) Update(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
 	var payload service.ProjectPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}

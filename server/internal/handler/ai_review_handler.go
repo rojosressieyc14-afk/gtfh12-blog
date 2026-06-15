@@ -66,7 +66,7 @@ func (h *AIReviewHandler) SaveResult(c *gin.Context) {
 		Suggestion         string   `json:"suggestion"`
 		ModelName          string   `json:"modelName"`
 	}
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "请求参数无效"})
 		return
 	}

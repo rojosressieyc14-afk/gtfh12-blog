@@ -24,7 +24,7 @@ type authPayload struct {
 
 func (h *AuthHandler) Register(c *gin.Context) {
 	var payload authPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -40,7 +40,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 func (h *AuthHandler) Login(c *gin.Context) {
 	var payload authPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -84,7 +84,7 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 		FocusAreas  []string `json:"focusAreas"`
 		Bio         string   `json:"bio"`
 	}
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}

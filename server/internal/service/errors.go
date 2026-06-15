@@ -36,6 +36,7 @@ var (
 	ErrInvalidRole           = errors.New("无效的用户角色")
 	ErrInvalidStatus         = errors.New("无效的用户状态")
 	ErrLastAdminBan          = errors.New("不能封禁最后一个仍在启用的管理员")
+	ErrLastAdminDelete       = errors.New("不能删除最后一个启用的管理员")
 	ErrPublishedMetaOnly     = errors.New("only published projects can update meta")
 	ErrSensitiveWordEmpty    = errors.New("敏感词不能为空")
 	ErrSensitiveWordInvalid  = errors.New("敏感词不合法")

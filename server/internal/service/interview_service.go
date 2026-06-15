@@ -19,12 +19,13 @@ type DeepSeekConfig interface {
 }
 
 type InterviewService struct {
-	db  *gorm.DB
-	cfg DeepSeekConfig
+	db      *gorm.DB
+	cfg     DeepSeekConfig
+	apiKeyS *ApiKeyService
 }
 
-func NewInterviewService(db *gorm.DB, cfg DeepSeekConfig) *InterviewService {
-	return &InterviewService{db: db, cfg: cfg}
+func NewInterviewService(db *gorm.DB, cfg DeepSeekConfig, apiKeyS *ApiKeyService) *InterviewService {
+	return &InterviewService{db: db, cfg: cfg, apiKeyS: apiKeyS}
 }
 
 type deepSeekMessage struct {
@@ -48,12 +49,18 @@ type deepSeekResponse struct {
 	Choices []deepSeekChoice `json:"choices"`
 }
 
-func (s *InterviewService) StartSession(userID uint, position, resumeText string, totalQuestions int) (*model.InterviewSession, error) {
+func (s *InterviewService) StartSession(userID uint, position, resumeText string, totalQuestions int, apiKeyID *uint) (*model.InterviewSession, error) {
 	if totalQuestions < 1 {
 		totalQuestions = 5
 	}
 	if totalQuestions > 20 {
 		totalQuestions = 20
+	}
+
+	if apiKeyID != nil && *apiKeyID > 0 {
+		if _, _, _, err := s.apiKeyS.GetDecryptedKey(*apiKeyID, userID); err != nil {
+			return nil, fmt.Errorf("API Key 无效: %w", err)
+		}
 	}
 
 	session := model.InterviewSession{
@@ -62,6 +69,7 @@ func (s *InterviewService) StartSession(userID uint, position, resumeText string
 		ResumeText:     resumeText,
 		TotalQuestions: totalQuestions,
 		Status:         model.InterviewStatusInProgress,
+		ApiKeyID:       apiKeyID,
 	}
 	if err := s.db.Create(&session).Error; err != nil {
 		return nil, err
@@ -235,12 +243,27 @@ func (s *InterviewService) buildConversationHistory(session model.InterviewSessi
 	return messages
 }
 
+func (s *InterviewService) resolveCredentials(session model.InterviewSession) (apiKey, baseURL string, err error) {
+	if session.ApiKeyID != nil && *session.ApiKeyID > 0 {
+		key, _, url, e := s.apiKeyS.GetDecryptedKey(*session.ApiKeyID, session.UserID)
+		if e != nil {
+			return "", "", e
+		}
+		return key, url, nil
+	}
+	return s.cfg.GetDeepSeekKey(), s.cfg.GetDeepSeekURL(), nil
+}
+
 func (s *InterviewService) generateFirstQuestion(session model.InterviewSession) (string, error) {
 	messages := []deepSeekMessage{
 		{Role: "system", Content: s.buildSystemPrompt(session)},
 		{Role: "user", Content: fmt.Sprintf("候选人正在面试「%s」职位。请开始面试，问第一个问题。", session.Position)},
 	}
-	return s.callDeepSeek(messages)
+	apiKey, baseURL, err := s.resolveCredentials(session)
+	if err != nil {
+		return "", err
+	}
+	return s.callDeepSeek(messages, apiKey, baseURL)
 }
 
 func (s *InterviewService) generateNextQuestion(session model.InterviewSession) (string, error) {
@@ -250,7 +273,11 @@ func (s *InterviewService) generateNextQuestion(session model.InterviewSession) 
 		"基于上面的对话历史，继续面试。这是第 %d 个问题（共 %d 题）。请根据候选人的上一个回答，提出下一个问题。",
 		len(session.Rounds)+1, session.TotalQuestions,
 	)})
-	return s.callDeepSeek(messages)
+	apiKey, baseURL, err := s.resolveCredentials(session)
+	if err != nil {
+		return "", err
+	}
+	return s.callDeepSeek(messages, apiKey, baseURL)
 }
 
 func (s *InterviewService) evaluateAnswer(session model.InterviewSession, round model.InterviewRound) (int, string, error) {
@@ -260,7 +287,11 @@ func (s *InterviewService) evaluateAnswer(session model.InterviewSession, round 
 		{Role: "user", Content: prompt},
 	}
 
-	result, err := s.callDeepSeek(messages)
+	apiKey, baseURL, err := s.resolveCredentials(session)
+	if err != nil {
+		return 0, "", err
+	}
+	result, err := s.callDeepSeek(messages, apiKey, baseURL)
 	if err != nil {
 		return 0, "", err
 	}
@@ -282,13 +313,12 @@ func (s *InterviewService) evaluateAnswer(session model.InterviewSession, round 
 	return eval.Score, eval.Feedback, nil
 }
 
-func (s *InterviewService) callDeepSeek(messages []deepSeekMessage) (string, error) {
-	apiKey := s.cfg.GetDeepSeekKey()
+func (s *InterviewService) callDeepSeek(messages []deepSeekMessage, apiKey, baseURL string) (string, error) {
 	if apiKey == "" {
-		return "", fmt.Errorf("DEEPSEEK_API_KEY 未配置")
+		return "", fmt.Errorf("API Key 未配置")
 	}
 
-	baseURL := strings.TrimRight(s.cfg.GetDeepSeekURL(), "/")
+	baseURL = strings.TrimRight(baseURL, "/")
 	reqBody := deepSeekRequest{
 		Model:       "deepseek-chat",
 		Messages:    messages,

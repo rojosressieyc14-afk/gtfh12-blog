@@ -15,6 +15,7 @@ type InterviewSession struct {
 	ResumeText     string           `gorm:"type:text" json:"resumeText"`
 	TotalQuestions int              `gorm:"not null;default:5" json:"totalQuestions"`
 	Status         string           `gorm:"size:20;not null;default:in_progress" json:"status"`
+	ApiKeyID       *uint            `gorm:"index" json:"apiKeyId"`
 	CreatedAt      time.Time        `json:"createdAt"`
 	UpdatedAt      time.Time        `json:"updatedAt"`
 	Rounds         []InterviewRound `gorm:"foreignKey:SessionID" json:"rounds,omitempty"`
