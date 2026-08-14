@@ -4,8 +4,8 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/pem"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -18,6 +18,7 @@ import (
 
 	"blog/server/internal/config"
 	"blog/server/internal/database"
+	"blog/server/internal/middleware"
 	"blog/server/internal/model"
 	"blog/server/internal/router"
 	"blog/server/internal/utils"
@@ -168,10 +169,21 @@ func TestRegisterLoginMeFlow(t *testing.T) {
 		t.Fatalf("register: expected 201, got %d, body: %s", w.Code, w.Body.String())
 	}
 	result := parseResponse(t, w)
-	token := result["token"].(string)
-	if token == "" {
-		t.Fatal("register: expected token")
+	if _, ok := result["user"]; !ok {
+		t.Fatalf("register: expected user in response, got %v", result)
 	}
+	cookies := w.Result().Cookies()
+	var tokenCookie *http.Cookie
+	for _, ck := range cookies {
+		if ck.Name == middleware.AuthCookieName {
+			tokenCookie = ck
+			break
+		}
+	}
+	if tokenCookie == nil || tokenCookie.Value == "" {
+		t.Fatal("register: expected blog_token cookie")
+	}
+	token := tokenCookie.Value
 
 	// Me
 	w = authenticatedRequest(r, "GET", "/api/auth/me", token, "")
@@ -184,6 +196,50 @@ func TestRegisterLoginMeFlow(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("login: expected 200, got %d, body: %s", w.Code, w.Body.String())
 	}
+}
+
+func TestLoginRememberCookie(t *testing.T) {
+	r, _ := setupTest(t)
+
+	seq := atomic.AddUint64(&testSeq, 1)
+	username := fmt.Sprintf("remember_%d", seq)
+	password := "TestPass123!"
+
+	w := requestJSON(r, "POST", "/api/auth/register", fmt.Sprintf(`{"username":"%s","password":"%s"}`, username, password))
+	if w.Code != http.StatusCreated {
+		t.Fatalf("register: expected 201, got %d, body: %s", w.Code, w.Body.String())
+	}
+
+	// 不勾选 -> 会话级 cookie（MaxAge == 0）
+	w = requestJSON(r, "POST", "/api/auth/login", fmt.Sprintf(`{"username":"%s","password":"%s"}`, username, password))
+	if w.Code != http.StatusOK {
+		t.Fatalf("login: expected 200, got %d, body: %s", w.Code, w.Body.String())
+	}
+	authCookie := findCookie(t, w, middleware.AuthCookieName)
+	if authCookie.MaxAge != 0 {
+		t.Fatalf("login without remember: expected session cookie (MaxAge 0), got %d", authCookie.MaxAge)
+	}
+
+	// 勾选 -> 30 天
+	w = requestJSON(r, "POST", "/api/auth/login", fmt.Sprintf(`{"username":"%s","password":"%s","remember":true}`, username, password))
+	if w.Code != http.StatusOK {
+		t.Fatalf("login remember: expected 200, got %d, body: %s", w.Code, w.Body.String())
+	}
+	authCookie = findCookie(t, w, middleware.AuthCookieName)
+	if authCookie.MaxAge != middleware.RememberCookieMaxAge {
+		t.Fatalf("login with remember: expected MaxAge %d, got %d", middleware.RememberCookieMaxAge, authCookie.MaxAge)
+	}
+}
+
+func findCookie(t *testing.T, w *httptest.ResponseRecorder, name string) *http.Cookie {
+	t.Helper()
+	for _, ck := range w.Result().Cookies() {
+		if ck.Name == name {
+			return ck
+		}
+	}
+	t.Fatalf("expected cookie %q", name)
+	return nil
 }
 
 func TestAdminLogin(t *testing.T) {
