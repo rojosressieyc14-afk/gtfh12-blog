@@ -225,6 +225,21 @@ if (form.remember) {
 - `cd web; npx vite build`
 - 手动冒烟：勾选/不勾选两条路径 + 刷新登录页预填充
 
+### T6: 补充 —— remember 时 JWT 有效期延长到 30 天
+
+**背景**：最终审查发现 `utils.GenerateJWT` 硬编码 24h 有效期（jwt.go:81），即使 cookie 30 天，登录态 24h 后即 401，30 天承诺不成立。用户已确认修复。
+
+- `utils.GenerateJWT(userID uint, username, role string)` → `GenerateJWT(userID uint, username, role string, ttl time.Duration)`；新增常量 `TokenTTLDefault = 24 * time.Hour`、`TokenTTLRemember = 30 * 24 * time.Hour`。
+- `AuthService.Login(username, password string, remember bool)`：remember → `TokenTTLRemember`，否则 `TokenTTLDefault`。
+- `AuthService.Register`：`TokenTTLDefault`（行为不变）。
+- `auth_handler.go` Login 传递 `payload.Remember`。
+- `handler_test.go`：两处 `GenerateJWT` 补 `utils.TokenTTLDefault`；`TestLoginRememberCookie` 增加断言——remember 登录后解析 cookie token，剩余有效期 > 29 天。
+
+**验收**
+
+- remember 登录的 JWT `ExpiresAt` ≈ now+30d；不勾选仍 24h。
+- 全部测试通过。
+
 ## Suggested commits
 
 1. `feat(server): support remember-me cookie max-age in auth`（T1+T2）
