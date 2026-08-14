@@ -18,6 +18,11 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+const (
+	TokenTTLDefault  = 24 * time.Hour
+	TokenTTLRemember = 30 * 24 * time.Hour
+)
+
 var (
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
@@ -68,9 +73,12 @@ func InitKeys(privateKeyPath, publicKeyPath string) error {
 	return nil
 }
 
-func GenerateJWT(userID uint, username, role string) (string, error) {
+func GenerateJWT(userID uint, username, role string, ttl time.Duration) (string, error) {
 	if privateKey == nil {
 		return "", fmt.Errorf("JWT private key not loaded, call InitKeys first")
+	}
+	if ttl <= 0 {
+		return "", fmt.Errorf("JWT TTL must be positive")
 	}
 
 	claims := Claims{
@@ -78,7 +86,7 @@ func GenerateJWT(userID uint, username, role string) (string, error) {
 		Username: username,
 		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}

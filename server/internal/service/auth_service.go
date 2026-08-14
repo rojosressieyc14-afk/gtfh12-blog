@@ -73,11 +73,11 @@ func (s *AuthService) Register(username, password string) (*model.User, string, 
 		return nil, "", err
 	}
 
-	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role)
+	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role, utils.TokenTTLDefault)
 	return &user, token, err
 }
 
-func (s *AuthService) Login(username, password string) (*model.User, string, error) {
+func (s *AuthService) Login(username, password string, remember bool) (*model.User, string, error) {
 	var user model.User
 	if err := s.db.Where("username = ?", username).First(&user).Error; err != nil {
 		return nil, "", ErrInvalidCredentials
@@ -89,7 +89,11 @@ func (s *AuthService) Login(username, password string) (*model.User, string, err
 		return nil, "", ErrInvalidCredentials
 	}
 
-	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role)
+	ttl := utils.TokenTTLDefault
+	if remember {
+		ttl = utils.TokenTTLRemember
+	}
+	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role, ttl)
 	return &user, token, err
 }
 

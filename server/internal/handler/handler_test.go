@@ -15,6 +15,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"blog/server/internal/config"
 	"blog/server/internal/database"
@@ -229,6 +230,14 @@ func TestLoginRememberCookie(t *testing.T) {
 	if authCookie.MaxAge != middleware.RememberCookieMaxAge {
 		t.Fatalf("login with remember: expected MaxAge %d, got %d", middleware.RememberCookieMaxAge, authCookie.MaxAge)
 	}
+	tokenClaims, err := utils.ParseJWT(authCookie.Value)
+	if err != nil {
+		t.Fatalf("parse remember token: %v", err)
+	}
+	remaining := time.Until(tokenClaims.ExpiresAt.Time)
+	if remaining < 29*24*time.Hour {
+		t.Fatalf("remember token should last ~30 days, remaining %v", remaining)
+	}
 }
 
 func findCookie(t *testing.T, w *httptest.ResponseRecorder, name string) *http.Cookie {
@@ -256,7 +265,7 @@ func TestAdminLogin(t *testing.T) {
 		t.Fatalf("create admin: %v", err)
 	}
 
-	adminToken, err := utils.GenerateJWT(admin.ID, admin.Username, model.RoleAdmin)
+	adminToken, err := utils.GenerateJWT(admin.ID, admin.Username, model.RoleAdmin, utils.TokenTTLDefault)
 	if err != nil {
 		t.Fatalf("generate admin token: %v", err)
 	}
@@ -270,7 +279,7 @@ func TestAdminLogin(t *testing.T) {
 	if err := db.Create(&user).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
-	userToken, err := utils.GenerateJWT(user.ID, user.Username, model.RoleUser)
+	userToken, err := utils.GenerateJWT(user.ID, user.Username, model.RoleUser, utils.TokenTTLDefault)
 	if err != nil {
 		t.Fatalf("generate user token: %v", err)
 	}
