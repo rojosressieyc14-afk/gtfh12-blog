@@ -184,6 +184,11 @@
             />
           </label>
 
+          <label v-if="mode === 'login'" class="remember-row">
+            <input v-model="form.remember" type="checkbox" class="remember-check" />
+            <span>记住账号密码</span>
+          </label>
+
           <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
 
           <button class="solid-btn auth-submit" :disabled="userStore.loading || celebrating">
@@ -222,9 +227,12 @@ const motionReady = ref(false);
 const blink = ref(false);
 const look = reactive({ x: 0, y: 0 });
 const sceneParallax = reactive({ x: 0, y: 0 });
+const REMEMBER_USERNAME_KEY = "blog_remembered_username";
+
 const form = reactive({
   username: "",
-  password: ""
+  password: "",
+  remember: false
 });
 
 let blinkTimer = 0;
@@ -449,6 +457,11 @@ async function submit() {
   try {
     if (mode.value === "login") {
       await userStore.loginAction(form);
+      if (form.remember) {
+        localStorage.setItem(REMEMBER_USERNAME_KEY, form.username);
+      } else {
+        localStorage.removeItem(REMEMBER_USERNAME_KEY);
+      }
     } else {
       await userStore.registerAction(form);
     }
@@ -475,6 +488,12 @@ function scheduleBlink() {
 }
 
 onMounted(() => {
+  const savedUsername = localStorage.getItem(REMEMBER_USERNAME_KEY);
+  if (savedUsername) {
+    form.username = savedUsername;
+    form.remember = true;
+  }
+
   const usernameEl = document.querySelector("input");
   if (usernameEl) {
     const rect = usernameEl.getBoundingClientRect();
@@ -946,5 +965,14 @@ onBeforeUnmount(() => {
     min-height: 46px;
     font-size: 0.95rem;
   }
+}
+
+.remember-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-soft);
 }
 </style>
