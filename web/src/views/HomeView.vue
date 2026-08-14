@@ -17,7 +17,7 @@
     <div class="section-head">
       <div>
         <p class="eyebrow">精选项目</p>
-        <h2>精选项目</h2>
+        <h3>精选项目</h3>
       </div>
       <router-link class="ghost-btn" :to="browseProjectsLink">查看完整作品集</router-link>
     </div>
@@ -54,7 +54,7 @@
     <div class="section-head">
       <div>
         <p class="eyebrow">最近文章</p>
-        <h2>最近文章</h2>
+        <h3>最近文章</h3>
       </div>
       <router-link class="ghost-btn" :to="articlesLibraryLink">打开文章库</router-link>
     </div>
@@ -164,7 +164,7 @@ onMounted(async () => {
 }
 
 .hero-apple__eyebrow {
-  color: var(--accent);
+  color: #b4530a;
   font-weight: 600;
 }
 
@@ -203,6 +203,10 @@ onMounted(async () => {
 
 .text-link:hover {
   text-decoration: underline;
+}
+
+.hero-apple__actions .text-link {
+  color: #b4530a;
 }
 
 .project-grid--hero .project-card--hero {
