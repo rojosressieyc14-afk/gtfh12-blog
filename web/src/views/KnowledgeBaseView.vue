@@ -34,7 +34,11 @@
       </article>
     </div>
 
-    <div v-else class="empty-panel">
+    <div v-if="errorMessage" class="empty-panel">
+      <h4>出错了</h4>
+      <p>{{ errorMessage }}</p>
+    </div>
+    <div v-else-if="!kbs.length" class="empty-panel">
       <h4>还没有知识库</h4>
       <p>创建一个知识库来管理你的私有知识。</p>
     </div>
@@ -78,10 +82,16 @@ const showCreate = ref(false);
 const newName = ref("");
 const newDesc = ref("");
 const creating = ref(false);
+const errorMessage = ref("");
 
 async function load() {
-  const { data } = await listKnowledgeBases();
-  kbs.value = data.items || [];
+  errorMessage.value = "";
+  try {
+    const { data } = await listKnowledgeBases();
+    kbs.value = data.items || [];
+  } catch (e) {
+    errorMessage.value = e?.response?.data?.message || "加载失败";
+  }
 }
 
 async function handleCreate() {
@@ -94,7 +104,7 @@ async function handleCreate() {
     showCreate.value = false;
     await load();
   } catch (e) {
-    alert(e?.response?.data?.message || "创建失败");
+    errorMessage.value = e?.response?.data?.message || "创建失败";
   } finally {
     creating.value = false;
   }
@@ -106,7 +116,7 @@ async function handleDelete(kb) {
     await deleteKnowledgeBase(kb.id);
     await load();
   } catch (e) {
-    alert("删除失败：" + (e?.response?.data?.message || e.message));
+    errorMessage.value = "删除失败：" + (e?.response?.data?.message || e.message);
   }
 }
 

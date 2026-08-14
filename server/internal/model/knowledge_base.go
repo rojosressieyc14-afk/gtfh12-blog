@@ -19,6 +19,8 @@ type KnowledgeDocument struct {
 	KnowledgeBase   KnowledgeBase `json:"knowledgeBase,omitempty"`
 	UserID          uint          `gorm:"index;not null" json:"userId"`
 	User            User          `json:"user,omitempty"`
+	ParentID        *uint         `gorm:"index" json:"parentId"`
+	SortOrder       int           `gorm:"not null;default:0" json:"sortOrder"`
 	Title           string        `gorm:"size:200" json:"title"`
 	Content         string        `gorm:"type:longtext;not null" json:"content"`
 	SourceType      string        `gorm:"size:20;not null;default:manual" json:"sourceType"`

@@ -23,6 +23,7 @@
           <router-link to="/about">关于我</router-link>
           <router-link to="/projects">作品集</router-link>
           <router-link to="/auth">登录 / 注册</router-link>
+          <a href="/api/feed" target="_blank" rel="noopener">RSS 订阅</a>
         </section>
 
         <section class="site-footer__column">

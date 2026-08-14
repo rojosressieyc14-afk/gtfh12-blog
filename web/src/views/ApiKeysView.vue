@@ -38,6 +38,8 @@
       <button class="solid-btn" @click="showAdd = true">添加 API Key</button>
     </div>
 
+    <p v-if="errorMessage" class="error-text" style="margin-top:12px">{{ errorMessage }}</p>
+
     <Teleport to="body">
       <div v-if="showAdd" class="modal-overlay" @click.self="showAdd = false">
         <div class="modal-card panel-card">
@@ -77,6 +79,7 @@ import { createApiKey, deleteApiKey, listApiKeys } from "../api/apiKey";
 
 const keys = ref([]);
 const showAdd = ref(false);
+const errorMessage = ref("");
 const newProvider = ref("deepseek");
 const newKey = ref("");
 const newBaseURL = ref("");
@@ -109,7 +112,7 @@ async function handleAdd() {
     showAdd.value = false;
     await load();
   } catch (e) {
-    alert(e?.response?.data?.message || "添加失败");
+    errorMessage.value = e?.response?.data?.message || "添加失败";
   } finally {
     adding.value = false;
   }
@@ -121,7 +124,7 @@ async function handleDelete(key) {
     await deleteApiKey(key.id);
     await load();
   } catch (e) {
-    alert("删除失败：" + (e?.response?.data?.message || e.message));
+    errorMessage.value = "删除失败：" + (e?.response?.data?.message || e.message);
   }
 }
 

@@ -40,7 +40,7 @@
 
       <div v-if="form.content" class="note-preview">
         <p class="eyebrow">预览</p>
-        <div class="markdown-body" v-html="renderedContent"></div>
+        <div v-highlight class="markdown-body" v-html="renderedContent"></div>
       </div>
 
       <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
@@ -188,38 +188,4 @@ onMounted(() => {
   background: var(--panel, rgba(10,14,19,0.6));
 }
 
-.note-preview :deep(.markdown-body) {
-  line-height: 1.7;
-}
-
-.note-preview :deep(.markdown-body h1),
-.note-preview :deep(.markdown-body h2),
-.note-preview :deep(.markdown-body h3) {
-  margin-top: 1.2em;
-  margin-bottom: 0.4em;
-}
-
-.note-preview :deep(.markdown-body p) {
-  margin: 0.6em 0;
-}
-
-.note-preview :deep(.markdown-body code) {
-  background: rgba(255,255,255,0.08);
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-size: 0.88em;
-}
-
-.note-preview :deep(.markdown-body pre code) {
-  display: block;
-  padding: 14px;
-  overflow-x: auto;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.3);
-}
-
-.note-preview :deep(.markdown-body img) {
-  max-width: 100%;
-  border-radius: 12px;
-}
 </style>

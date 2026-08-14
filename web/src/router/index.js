@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { useUserStore } from "../stores/user";
 import HomeView from "../views/HomeView.vue";
 import AuthView from "../views/AuthView.vue";
 import EditorView from "../views/EditorView.vue";
@@ -46,7 +47,7 @@ const routes = [
       { path: "articles", name: "uc-articles", component: MyArticlesView, meta: { title: "我的文章" } },
       { path: "projects", name: "uc-projects", component: MyProjectsView, meta: { title: "我的项目" } },
       { path: "knowledge-base", name: "uc-knowledge-base", component: KnowledgeBaseView, meta: { title: "知识库" } },
-      { path: "knowledge-base/:id", name: "uc-knowledge-base-detail", component: KnowledgeBaseDetail, meta: { title: "知识库详情" } },
+      { path: "knowledge-base/:id", name: "uc-knowledge-base-detail", component: KnowledgeBaseDetail, meta: { title: "知识库详情", sidebar: false } },
       { path: "knowledge-base/:id/editor", name: "uc-knowledge-base-editor", component: KnowledgeBaseNoteEditor, meta: { title: "新建笔记", sidebar: false } },
       { path: "knowledge-base/:id/editor/:noteId", name: "uc-knowledge-base-editor-edit", component: KnowledgeBaseNoteEditor, meta: { title: "编辑笔记", sidebar: false } },
       { path: "api-keys", name: "uc-api-keys", component: ApiKeysView, meta: { title: "API Key 管理" } },
@@ -86,9 +87,12 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 })
 });
 
-router.beforeEach((to) => {
-  const token = localStorage.getItem("blog_token");
-  if (to.meta?.requiresAuth && !token) {
+router.beforeEach(async (to) => {
+  const userStore = useUserStore();
+  if (userStore.restoring) {
+    await userStore.fetchProfile();
+  }
+  if (to.meta?.requiresAuth && !userStore.isLoggedIn) {
     return { name: "auth" };
   }
   document.title = to.meta?.title && to.meta.title !== "PulseBlog" ? `${to.meta.title} | PulseBlog` : "PulseBlog";

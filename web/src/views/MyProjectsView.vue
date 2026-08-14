@@ -19,6 +19,8 @@
       </article>
     </div>
 
+    <p v-if="errorMessage" class="error-text" style="margin-bottom:12px">{{ errorMessage }}</p>
+
     <div v-if="projects.length" class="project-grid">
       <article v-for="item in projects" :key="item.id" class="project-card panel-card">
         <div class="project-card__head">
@@ -73,6 +75,7 @@ const projects = ref([]);
 const page = ref(1);
 const pageSize = 8;
 const total = ref(0);
+const errorMessage = ref("");
 
 const labelMap = {
   draft: "草稿",
@@ -103,7 +106,7 @@ async function handleDelete(id, title) {
     await deleteProject(id);
     await loadMine();
   } catch (e) {
-    alert("删除失败：" + (e.response?.data?.message || e.message));
+    errorMessage.value = "删除失败：" + (e.response?.data?.message || e.message);
   }
 }
 

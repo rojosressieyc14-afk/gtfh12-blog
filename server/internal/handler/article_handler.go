@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"blog/server/internal/middleware"
 	"blog/server/internal/model"
@@ -72,6 +73,58 @@ func (h *ArticleHandler) Trending(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"items": items})
+}
+
+func (h *ArticleHandler) Feed(c *gin.Context) {
+	articles, err := h.articleService.ListFeed(20)
+	if err != nil {
+		c.String(500, "Failed to generate feed")
+		return
+	}
+	c.Header("Content-Type", "application/atom+xml; charset=utf-8")
+	c.String(200, `<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>PulseBlog</title>
+  <link href="%s/feed" rel="self"/>
+  <link href="%s"/>
+  <updated>%s</updated>
+  <id>urn:uuid:pulseblog</id>
+`, h.siteURL(c), h.siteURL(c), time.Now().Format(time.RFC3339))
+	for _, a := range articles {
+		updated := a.UpdatedAt.Format(time.RFC3339)
+		published := ""
+		if a.PublishedAt != nil {
+			published = a.PublishedAt.Format(time.RFC3339)
+		}
+		url := h.siteURL(c) + "/article/" + strconv.Itoa(int(a.ID))
+		c.String(200, `  <entry>
+    <title>%s</title>
+    <link href="%s"/>
+    <id>%s</id>
+    <updated>%s</updated>
+    <published>%s</published>
+    <summary>%s</summary>
+  </entry>
+`, xmlEscape(a.Title), url, url, updated, published, xmlEscape(a.Summary))
+	}
+	c.String(200, `</feed>`)
+}
+
+func xmlEscape(s string) string {
+	s = strings.ReplaceAll(s, "&", "&amp;")
+	s = strings.ReplaceAll(s, "<", "&lt;")
+	s = strings.ReplaceAll(s, ">", "&gt;")
+	s = strings.ReplaceAll(s, "\"", "&quot;")
+	s = strings.ReplaceAll(s, "'", "&apos;")
+	return s
+}
+
+func (h *ArticleHandler) siteURL(c *gin.Context) string {
+	scheme := "http"
+	if c.Request.TLS != nil {
+		scheme = "https"
+	}
+	return scheme + "://" + c.Request.Host
 }
 
 func (h *ArticleHandler) Detail(c *gin.Context) {
@@ -239,6 +292,17 @@ func (h *ArticleHandler) ToggleFavorite(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"item": item})
+}
+
+func (h *ArticleHandler) Stats(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	authUser := middleware.GetAuthUser(c)
+	items, err := h.articleService.GetArticleStats(uint(id), authUser.ID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "文章不存在"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"items": items})
 }
 
 func defaultQueryValue(value, fallback string) string {

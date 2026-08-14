@@ -1,53 +1,45 @@
 <template>
   <section v-if="article" class="article-detail-page">
-    <div class="detail-layout panel-card article-detail-shell article-detail-shell--brand">
-      <div class="article-detail-top">
-        <div class="article-detail-main-copy">
-          <div class="detail-meta">
-            <router-link class="status-chip published" :to="`/author/${article.author?.id}`">
-              {{ article.author?.username || "匿名作者" }}
-            </router-link>
-            <span>{{ article.category?.name || "未分类" }}</span>
-          </div>
-
-          <h2 class="detail-title">{{ article.title }}</h2>
-          <p class="detail-summary">{{ article.summary || "暂无摘要" }}</p>
-
-          <div class="detail-stats article-detail-stats">
-            <span>{{ formatDate(article.publishedAt || article.createdAt) }}</span>
-            <span>{{ commentCount }} 条评论</span>
-            <span>{{ article.viewCount || 0 }} 次阅读</span>
-            <span>{{ readingMinutes }} 分钟阅读</span>
-          </div>
-
-          <div v-if="article.tags?.length" class="tag-row tag-row--detail">
-            <span v-for="tag in article.tags" :key="tag.id || tag.name" class="tag-chip"># {{ tag.name }}</span>
-          </div>
-
-          <div class="reaction-row">
-            <button class="ghost-btn reaction-btn" @click="onLike">
-              {{ article.isLiked ? "已点赞" : "点赞" }} · {{ article.likesCount || 0 }}
-            </button>
-            <button class="ghost-btn reaction-btn" @click="onFavorite">
-              {{ article.isFavorited ? "已收藏" : "收藏" }} · {{ article.favoritesCount || 0 }}
-            </button>
-          </div>
+    <div class="reading-progress-bar" :style="{ width: readProgress + '%' }"></div>
+    <div class="detail-layout article-detail-shell">
+      <div class="article-detail-header">
+        <div class="detail-meta">
+          <router-link class="status-chip published" :to="`/author/${article.author?.id}`">
+            {{ article.author?.username || "匿名作者" }}
+          </router-link>
+          <span>{{ article.category?.name || "未分类" }}</span>
         </div>
 
-        <div class="article-detail-side-visual">
-          <div class="article-detail-orbit">
-            <div class="article-detail-node article-detail-node--one"></div>
-            <div class="article-detail-node article-detail-node--two"></div>
-            <div class="article-detail-node article-detail-node--three"></div>
-            <div v-if="coverUrl" class="detail-cover article-detail-cover">
-              <img :src="coverUrl" :alt="article.title" />
-            </div>
-          </div>
+        <h1 class="detail-title">{{ article.title }}</h1>
+        <p class="detail-summary">{{ article.summary || "暂无摘要" }}</p>
+
+        <div class="detail-stats">
+          <span>{{ formatDate(article.publishedAt || article.createdAt) }}</span>
+          <span>{{ commentCount }} 条评论</span>
+          <span>{{ article.viewCount || 0 }} 次阅读</span>
+          <span>{{ readingMinutes }} 分钟阅读</span>
+        </div>
+
+        <div v-if="article.tags?.length" class="tag-row tag-row--detail">
+          <span v-for="tag in article.tags" :key="tag.id || tag.name" class="tag-chip"># {{ tag.name }}</span>
+        </div>
+
+        <div v-if="coverUrl" class="detail-cover article-detail-cover">
+          <img :src="coverUrl" :alt="article.title" />
+        </div>
+
+        <div class="reaction-row">
+          <button class="ghost-btn reaction-btn" @click="onLike">
+            {{ article.isLiked ? "已点赞" : "点赞" }} · {{ article.likesCount || 0 }}
+          </button>
+          <button class="ghost-btn reaction-btn" @click="onFavorite">
+            {{ article.isFavorited ? "已收藏" : "收藏" }} · {{ article.favoritesCount || 0 }}
+          </button>
         </div>
       </div>
 
       <section class="article-reading-layout">
-        <article class="markdown-body article-detail-body" v-html="html"></article>
+        <article v-highlight class="markdown-body article-detail-body" v-html="html"></article>
 
         <aside class="article-reading-side">
           <section class="project-detail-panel article-outline-panel">
@@ -76,6 +68,20 @@
             <router-link class="ghost-btn" :to="`/author/${article.author?.id}`">打开作者页</router-link>
           </section>
         </aside>
+      </section>
+
+      <section class="share-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">分享</p>
+            <h3>把这篇文章分享给更多人</h3>
+          </div>
+        </div>
+        <div class="share-buttons">
+          <button class="ghost-btn share-btn" @click="shareTwitter">Twitter / X</button>
+          <button class="ghost-btn share-btn" @click="shareLinkedIn">LinkedIn</button>
+          <button class="ghost-btn share-btn" @click="copyLink">复制链接</button>
+        </div>
       </section>
 
       <section class="comment-panel article-comment-panel">
@@ -131,7 +137,8 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useHead } from "@unhead/vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { useRoute } from "vue-router";
@@ -146,9 +153,40 @@ const comments = ref([]);
 const commentText = ref("");
 const replyTo = ref(null);
 const replyText = ref("");
+const readProgress = ref(0);
+
+useHead({
+  title: () => article.value?.title ? `${article.value.title} — PulseBlog` : "PulseBlog",
+  meta: () => {
+    const a = article.value;
+    if (!a) return [];
+    return [
+      { property: "og:title", content: a.title },
+      { property: "og:description", content: a.summary || "" },
+      { property: "og:type", content: "article" },
+      { property: "og:url", content: window.location.href },
+      { name: "twitter:card", content: "summary_large_image" },
+    ];
+  },
+});
+let scrollHandler = null;
+
+function updateReadProgress() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  readProgress.value = docHeight > 0 ? Math.min(100, Math.round((scrollTop / docHeight) * 100)) : 0;
+}
+
+function stripInlineMarkdown(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/`(.+?)`/g, "$1")
+    .replace(/\[(.+?)\]\(.+?\)/g, "$1");
+}
 
 function buildHeadingId(text, index) {
-  const safe = text
+  const safe = stripInlineMarkdown(text)
     .toLowerCase()
     .replace(/<[^>]+>/g, "")
     .replace(/[^\w\u4e00-\u9fa5\s-]/g, "")
@@ -159,11 +197,14 @@ function buildHeadingId(text, index) {
 
 const articleOutline = computed(() => {
   const matches = [...(article.value?.content || "").matchAll(/^(#{1,3})\s+(.+)$/gm)];
-  return matches.map((match, index) => ({
-    level: match[1].length,
-    text: match[2].trim(),
-    id: buildHeadingId(match[2], index)
-  }));
+  return matches.map((match, index) => {
+    const text = stripInlineMarkdown(match[2].trim());
+    return {
+      level: match[1].length,
+      text,
+      id: buildHeadingId(text, index)
+    };
+  });
 });
 
 const html = computed(() => {
@@ -184,13 +225,21 @@ const readingMinutes = computed(() => {
 });
 
 async function loadDetail() {
-  const { data } = await getArticle(route.params.id);
-  article.value = data.item;
+  try {
+    const { data } = await getArticle(route.params.id);
+    article.value = data.item;
+  } catch (e) {
+    article.value = null;
+  }
 }
 
 async function loadComments() {
-  const { data } = await listComments(route.params.id);
-  comments.value = data.items;
+  try {
+    const { data } = await listComments(route.params.id);
+    comments.value = data.items;
+  } catch (e) {
+    comments.value = [];
+  }
 }
 
 async function submitComment() {
@@ -198,6 +247,24 @@ async function submitComment() {
   await createComment(route.params.id, { content: commentText.value });
   commentText.value = "";
   await loadComments();
+}
+
+function shareTwitter() {
+  const url = encodeURIComponent(window.location.href);
+  const text = encodeURIComponent(article.value?.title || "");
+  window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank", "noopener");
+}
+
+function shareLinkedIn() {
+  const url = encodeURIComponent(window.location.href);
+  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, "_blank", "noopener");
+}
+
+async function copyLink() {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    // brief feedback — toast would be ideal but keeping minimal
+  } catch {}
 }
 
 async function submitReply(parentId) {
@@ -231,160 +298,115 @@ function formatDate(value) {
 onMounted(async () => {
   await loadDetail();
   await loadComments();
+  scrollHandler = () => requestAnimationFrame(updateReadProgress);
+  window.addEventListener("scroll", scrollHandler, { passive: true });
+});
+
+onUnmounted(() => {
+  if (scrollHandler) window.removeEventListener("scroll", scrollHandler);
 });
 </script>
 
 <style scoped>
-.article-detail-shell--brand {
-  background:
-    radial-gradient(circle at 84% 18%, rgba(255, 209, 102, 0.1), transparent 24%),
-    radial-gradient(circle at 14% 76%, rgba(255, 138, 76, 0.12), transparent 24%),
-    rgba(255, 255, 255, 0.07);
+.reading-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 9999;
+  transition: width 0.1s linear;
+}
+.article-detail-shell {
+  background: var(--panel);
+  border-radius: 32px;
+  padding: 42px;
+  border: 1px solid var(--border);
 }
 
-.article-detail-top {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-  gap: 24px;
-  align-items: center;
-}
-
-.article-detail-side-visual {
-  position: relative;
-}
-
-.article-detail-orbit {
-  position: relative;
-  min-height: 360px;
+.article-detail-header {
+  max-width: 720px;
+  margin: 0 auto 48px;
+  text-align: center;
 }
 
 .article-reading-layout {
-  margin-top: 28px;
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
-  gap: 22px;
+  grid-template-columns: 1fr 220px;
+  gap: 40px;
   align-items: start;
 }
 
 .article-reading-side {
-  display: grid;
-  gap: 18px;
   position: sticky;
   top: 112px;
+  display: grid;
+  gap: 16px;
 }
 
 .article-outline-list {
   display: grid;
-  gap: 10px;
+  gap: 6px;
 }
 
 .article-outline-link {
+  display: block;
+  width: 100%;
   text-align: left;
-  color: inherit;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 12px 14px;
+  border: none;
+  background: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: rgba(246,241,234,0.5);
   cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition: color 0.15s, background 0.15s;
+  line-height: 1.4;
 }
-
 .article-outline-link:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 209, 102, 0.28);
-  background: rgba(255, 209, 102, 0.08);
+  color: rgba(246,241,234,0.8);
+  background: rgba(255,255,255,0.04);
 }
-
 .article-outline-link--2 {
-  margin-left: 14px;
+  padding-left: 20px;
+  font-size: 12px;
 }
-
 .article-outline-link--3 {
-  margin-left: 28px;
+  padding-left: 28px;
+  font-size: 11px;
 }
 
-.article-detail-node {
-  position: absolute;
-  border: 2px solid rgba(255, 243, 231, 0.74);
-  background: rgba(255, 204, 153, 0.14);
-  animation: articleNodeFloat 5s ease-in-out infinite;
+.share-panel {
+  margin-top: 48px;
 }
-
-.article-detail-node--one {
-  width: 60px;
-  height: 60px;
-  left: 22px;
-  top: 18px;
-  border-radius: 18px;
+.share-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
-
-.article-detail-node--two {
-  width: 54px;
-  height: 54px;
-  right: 26px;
-  top: 86px;
-  border-radius: 999px;
-  animation-delay: 0.7s;
-}
-
-.article-detail-node--three {
-  width: 64px;
-  height: 54px;
-  left: 34px;
-  bottom: 26px;
-  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-  border-radius: 10px;
-  animation-delay: 1.1s;
-}
-
-@keyframes articleNodeFloat {
-  0%,
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-7px) rotate(5deg);
-  }
+.share-btn {
+  font-size: 13px;
 }
 
 @media (max-width: 1080px) {
   .article-reading-layout {
     grid-template-columns: 1fr;
   }
-
   .article-reading-side {
     position: static;
   }
 }
 
-@media (max-width: 960px) {
-  .article-detail-top {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 768px) {
-  .article-detail-orbit {
-    min-height: 240px;
-  }
-
-  .article-detail-stats {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-
-  .article-detail-side-visual {
-    display: none;
-  }
-
-  .article-detail-shell--brand {
+  .article-detail-shell {
     padding: 20px;
   }
-
+  .detail-stats {
+    flex-wrap: wrap;
+  }
   .reaction-row {
     flex-direction: column;
   }
-
   .reaction-btn {
     width: 100%;
     justify-content: center;
@@ -395,19 +417,10 @@ onMounted(async () => {
   .detail-title {
     font-size: clamp(1.4rem, 6vw, 2rem);
   }
-
   .detail-meta {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
-  }
-
-  .article-detail-body {
-    padding: 16px 18px;
-  }
-
-  .article-outline-link {
-    padding: 10px 12px;
   }
 }
 </style>

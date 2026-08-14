@@ -206,6 +206,41 @@ func (h *KnowledgeBaseHandler) Query(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"result": result})
 }
 
+func (h *KnowledgeBaseHandler) GetDocumentTree(c *gin.Context) {
+	authUser := middleware.GetAuthUser(c)
+	id, _ := strconv.Atoi(c.Param("id"))
+	if id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+		return
+	}
+	tree, err := h.svc.GetDocumentTree(uint(id), authUser.ID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"tree": tree})
+}
+
+func (h *KnowledgeBaseHandler) MoveDocument(c *gin.Context) {
+	authUser := middleware.GetAuthUser(c)
+	kbID, _ := strconv.Atoi(c.Param("id"))
+	docID, _ := strconv.Atoi(c.Param("docId"))
+	if kbID <= 0 || docID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+		return
+	}
+	var opts service.MoveDocumentOpts
+	if err := safeBindJSON(c, &opts); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "请求参数无效"})
+		return
+	}
+	if err := h.svc.MoveDocument(uint(kbID), uint(docID), authUser.ID, opts); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "文档已移动"})
+}
+
 func (h *KnowledgeBaseHandler) GetPublicNote(c *gin.Context) {
 	noteID, _ := strconv.Atoi(c.Param("id"))
 	if noteID <= 0 {

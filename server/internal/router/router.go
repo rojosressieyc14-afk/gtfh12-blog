@@ -75,13 +75,16 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 	})
 
 	api := r.Group("/api")
+	api.Use(middleware.CSRF())
 	{
 		api.POST("/auth/register", middleware.RateLimit(registerLimiter), authHandler.Register)
 		api.POST("/auth/login", middleware.RateLimit(loginLimiter), authHandler.Login)
+		api.POST("/auth/logout", authHandler.Logout)
 		api.GET("/authors/recommended", authHandler.RecommendedAuthors)
 		api.GET("/authors/:id", authHandler.AuthorProfile)
 		api.GET("/kb-notes/:id", kbHandler.GetPublicNote)
 		api.GET("/metadata", metaHandler.List)
+		api.GET("/feed", articleHandler.Feed)
 		api.GET("/articles", articleHandler.ListPublished)
 		api.GET("/articles/trending", articleHandler.Trending)
 		api.GET("/projects", projectHandler.ListPublished)
@@ -107,6 +110,7 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 		api.DELETE("/projects/:id", middleware.RequireAuth(), projectHandler.Delete)
 		api.POST("/articles/:id/submit", middleware.RequireAuth(), articleHandler.Submit)
 		api.POST("/projects/:id/submit", middleware.RequireAuth(), projectHandler.Submit)
+		api.GET("/my/articles/:id/stats", middleware.RequireAuth(), articleHandler.Stats)
 		api.POST("/articles/:id/like", middleware.RequireAuth(), articleHandler.ToggleLike)
 		api.POST("/articles/:id/favorite", middleware.RequireAuth(), articleHandler.ToggleFavorite)
 		api.POST("/articles/:id/comments", middleware.RequireAuth(), commentHandler.Create)
@@ -123,6 +127,8 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 		api.POST("/knowledge-bases/:id/documents", middleware.RequireAuth(), kbHandler.AddDocument)
 		api.PUT("/knowledge-bases/:id/documents/:docId", middleware.RequireAuth(), kbHandler.UpdateDocument)
 		api.GET("/knowledge-bases/:id/documents", middleware.RequireAuth(), kbHandler.ListDocuments)
+		api.GET("/knowledge-bases/:id/tree", middleware.RequireAuth(), kbHandler.GetDocumentTree)
+		api.PUT("/knowledge-bases/:id/documents/:docId/move", middleware.RequireAuth(), kbHandler.MoveDocument)
 		api.DELETE("/knowledge-bases/:id/documents/:docId", middleware.RequireAuth(), kbHandler.DeleteDocument)
 		api.POST("/knowledge-bases/:id/query", middleware.RequireAuth(), kbHandler.Query)
 

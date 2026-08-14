@@ -1,15 +1,15 @@
 import { defineStore } from "pinia";
-import { getMe, login, register } from "../api/auth";
+import { getMe, login, logout, register } from "../api/auth";
 import { updateProfile } from "../api/profile";
 
 export const useUserStore = defineStore("user", {
   state: () => ({
-    token: localStorage.getItem("blog_token") || "",
     profile: null,
-    loading: false
+    loading: false,
+    restoring: true
   }),
   getters: {
-    isLoggedIn: (state) => Boolean(state.token),
+    isLoggedIn: (state) => Boolean(state.profile),
     isAdmin: (state) => state.profile?.role === "admin",
     isBanned: (state) => state.profile?.status === "banned"
   },
@@ -18,9 +18,7 @@ export const useUserStore = defineStore("user", {
       this.loading = true;
       try {
         const { data } = await login(payload);
-        this.token = data.token;
         this.profile = data.user;
-        localStorage.setItem("blog_token", data.token);
       } finally {
         this.loading = false;
       }
@@ -29,33 +27,34 @@ export const useUserStore = defineStore("user", {
       this.loading = true;
       try {
         const { data } = await register(payload);
-        this.token = data.token;
         this.profile = data.user;
-        localStorage.setItem("blog_token", data.token);
       } finally {
         this.loading = false;
       }
     },
     async fetchProfile() {
-      if (!this.token) return;
+      this.restoring = true;
       try {
         const { data } = await getMe();
         this.profile = data.user;
         if (data.user.status === "banned") {
-          this.logout();
+          this.profile = null;
         }
       } catch (error) {
-        this.logout();
+        this.profile = null;
+      } finally {
+        this.restoring = false;
       }
     },
     async updateProfileAction(payload) {
       const { data } = await updateProfile(payload);
       this.profile = data.user;
     },
-    logout() {
-      this.token = "";
+    async logout() {
+      try {
+        await logout();
+      } catch {}
       this.profile = null;
-      localStorage.removeItem("blog_token");
     }
   }
 });

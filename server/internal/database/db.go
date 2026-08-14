@@ -45,6 +45,7 @@ func Migrate(db *gorm.DB) error {
 		&model.KnowledgeDocument{},
 		&model.KbDocumentTag{},
 		&model.UserApiKey{},
+		&model.DailyView{},
 	)
 }
 

@@ -19,7 +19,7 @@ import { useAdminStore } from "./stores/auth";
 
 const store = useAdminStore();
 const route = useRoute();
-const showQuickNav = computed(() => route.name !== "login" && localStorage.getItem("admin_token"));
+const showQuickNav = computed(() => route.name !== "login" && store.isLoggedIn);
 
 onMounted(() => {
   store.fetchProfile();

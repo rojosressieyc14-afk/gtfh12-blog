@@ -87,7 +87,7 @@
       </div>
 
       <div class="article-grid article-grid--featured">
-        <ArticleCard v-for="item in trendingArticles" :key="`trending-${item.id}`" :item="item" />
+        <ArticleCard v-for="item in trendingArticles" :key="`trending-${item.id}`" :item="item" :keyword="keyword" />
       </div>
     </section>
 
@@ -100,7 +100,7 @@
       </div>
 
       <div class="article-grid">
-        <ArticleCard v-for="item in articles" :key="item.id" :item="item" />
+        <ArticleCard v-for="item in articles" :key="item.id" :item="item" :keyword="keyword" />
       </div>
 
       <div v-if="!articles.length" class="empty-panel">

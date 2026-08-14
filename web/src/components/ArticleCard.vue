@@ -8,8 +8,8 @@
       <span>{{ item.category?.name || "未分类" }}</span>
     </div>
 
-    <h3>{{ item.title }}</h3>
-    <p>{{ item.summary || "这篇文章还没有摘要，但标题已经概括了主要内容。" }}</p>
+    <h3 v-html="highlight(item.title)"></h3>
+    <p v-html="highlight(item.summary || '这篇文章还没有摘要，但标题已经概括了主要内容。')"></p>
 
     <div v-if="item.tags?.length" class="tag-row">
       <span v-for="tag in item.tags.slice(0, 3)" :key="tag.id || tag.name" class="tag-chip"># {{ tag.name }}</span>
@@ -27,11 +27,15 @@ import { computed } from "vue";
 import { toAssetUrl } from "../utils/asset";
 
 const props = defineProps({
-  item: {
-    type: Object,
-    required: true
-  }
+  item: { type: Object, required: true },
+  keyword: { type: String, default: "" },
 });
+
+function highlight(text) {
+  if (!props.keyword || !text) return text;
+  const escaped = props.keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return text.replace(new RegExp(`(${escaped})`, "gi"), "<mark>$1</mark>");
+}
 
 const statusLabel = computed(() => {
   const map = {

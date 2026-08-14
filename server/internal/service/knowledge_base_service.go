@@ -330,6 +330,14 @@ type Source struct {
 	Score   float64 `json:"score"`
 }
 
+type DocTreeItem struct {
+	ID        uint           `json:"id"`
+	Title     string         `json:"title"`
+	ParentID  *uint          `json:"parentId"`
+	SortOrder int            `json:"sortOrder"`
+	Children  []*DocTreeItem `json:"children"`
+}
+
 type LLMProvider interface {
 	Chat(systemPrompt, userMessage string) (string, error)
 	Name() string
@@ -403,6 +411,65 @@ func (s *KnowledgeBaseService) Query(kbID, userID uint, question string, llm LLM
 		Answer:  answer,
 		Sources: sources,
 	}, nil
+}
+
+func (s *KnowledgeBaseService) GetDocumentTree(kbID, userID uint) ([]*DocTreeItem, error) {
+	if _, err := s.GetByID(kbID, userID); err != nil {
+		return nil, err
+	}
+	var docs []model.KnowledgeDocument
+	if err := s.db.Where("knowledge_base_id = ?", kbID).
+		Order("sort_order asc, created_at desc").
+		Find(&docs).Error; err != nil {
+		return nil, err
+	}
+	docMap := make(map[uint]*DocTreeItem)
+	var roots []*DocTreeItem
+	for i := range docs {
+		item := &DocTreeItem{
+			ID:        docs[i].ID,
+			Title:     docs[i].Title,
+			ParentID:  docs[i].ParentID,
+			SortOrder: docs[i].SortOrder,
+			Children:  []*DocTreeItem{},
+		}
+		docMap[docs[i].ID] = item
+		if docs[i].ParentID == nil {
+			roots = append(roots, item)
+		} else {
+			if parent, ok := docMap[*docs[i].ParentID]; ok {
+				parent.Children = append(parent.Children, item)
+			} else {
+				roots = append(roots, item)
+			}
+		}
+	}
+	return roots, nil
+}
+
+type MoveDocumentOpts struct {
+	ParentID  *uint `json:"parentId"`
+	SortOrder int   `json:"sortOrder"`
+}
+
+func (s *KnowledgeBaseService) MoveDocument(kbID, docID, userID uint, opts MoveDocumentOpts) error {
+	if _, err := s.GetByID(kbID, userID); err != nil {
+		return err
+	}
+	var doc model.KnowledgeDocument
+	if err := s.db.Where("id = ? AND knowledge_base_id = ?", docID, kbID).First(&doc).Error; err != nil {
+		return ErrDocNotFound
+	}
+	if opts.ParentID != nil {
+		var parent model.KnowledgeDocument
+		if err := s.db.Where("id = ? AND knowledge_base_id = ?", *opts.ParentID, kbID).First(&parent).Error; err != nil {
+			return errors.New("父文档不存在")
+		}
+	}
+	return s.db.Model(&doc).Updates(map[string]interface{}{
+		"parent_id":  opts.ParentID,
+		"sort_order": opts.SortOrder,
+	}).Error
 }
 
 func (s *KnowledgeBaseService) chunkText(text string) []string {

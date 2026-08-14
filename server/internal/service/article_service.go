@@ -224,8 +224,9 @@ func (s *ArticleService) ListPublished(filter PublishedArticleFilter) ([]model.A
 		Where("articles.status = ? AND articles.is_private = ?", model.ArticlePublished, false)
 	countQuery := s.db.Model(&model.Article{}).Where("articles.status = ? AND articles.is_private = ?", model.ArticlePublished, false)
 	if filter.Keyword != "" {
-		query = query.Where("articles.title LIKE ? OR articles.summary LIKE ?", "%"+filter.Keyword+"%", "%"+filter.Keyword+"%")
-		countQuery = countQuery.Where("articles.title LIKE ? OR articles.summary LIKE ?", "%"+filter.Keyword+"%", "%"+filter.Keyword+"%")
+		kw := "%" + filter.Keyword + "%"
+		query = query.Where("articles.title LIKE ? OR articles.summary LIKE ? OR articles.content LIKE ?", kw, kw, kw)
+		countQuery = countQuery.Where("articles.title LIKE ? OR articles.summary LIKE ? OR articles.content LIKE ?", kw, kw, kw)
 	}
 	if filter.CategoryID != nil {
 		query = query.Where("articles.category_id = ?", *filter.CategoryID)
@@ -272,6 +273,19 @@ func (s *ArticleService) ListPublished(filter PublishedArticleFilter) ([]model.A
 	}
 	pagination.Total = total
 	return articles, pagination, err
+}
+
+func (s *ArticleService) ListFeed(limit int) ([]model.Article, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	var articles []model.Article
+	err := s.baseArticleQuery().
+		Where("status = ? AND is_private = ?", model.ArticlePublished, false).
+		Order("published_at desc, created_at desc").
+		Limit(limit).
+		Find(&articles).Error
+	return articles, err
 }
 
 func (s *ArticleService) ListTrending(limit int) ([]model.Article, error) {
@@ -372,9 +386,36 @@ func (s *ArticleService) GetByID(articleID uint, viewerID uint) (*model.Article,
 	if article.Status == model.ArticlePublished && !article.IsPrivate {
 		_ = s.db.Model(&article).UpdateColumn("view_count", gorm.Expr("view_count + ?", 1)).Error
 		article.ViewCount++
+		today := time.Now().Format("2006-01-02")
+		var dv model.DailyView
+		err := s.db.Where("article_id = ? AND date = ?", articleID, today).First(&dv).Error
+		if err == nil {
+			s.db.Model(&dv).UpdateColumn("count", gorm.Expr("count + ?", 1))
+		} else {
+			s.db.Create(&model.DailyView{ArticleID: articleID, Date: today, Count: 1})
+		}
 	}
 	s.fillReactionSummary(&article, viewerID)
 	return &article, nil
+}
+
+type DailyStatsItem struct {
+	Date  string `json:"date"`
+	Count int64  `json:"count"`
+}
+
+func (s *ArticleService) GetArticleStats(articleID, userID uint) ([]DailyStatsItem, error) {
+	var article model.Article
+	if err := s.db.Where("id = ? AND author_id = ?", articleID, userID).First(&article).Error; err != nil {
+		return nil, ErrDocNotFound
+	}
+	var items []DailyStatsItem
+	s.db.Model(&model.DailyView{}).
+		Select("date, count").
+		Where("article_id = ?", articleID).
+		Order("date asc").
+		Scan(&items)
+	return items, nil
 }
 
 func (s *ArticleService) Review(articleID, reviewerID uint, payload ReviewPayload) (*model.Article, error) {

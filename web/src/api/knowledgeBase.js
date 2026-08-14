@@ -12,4 +12,7 @@ export const deleteDocument = (kbId, docId) => client.delete(`/knowledge-bases/$
 
 export const queryKnowledgeBase = (kbId, payload) => client.post(`/knowledge-bases/${kbId}/query`, payload);
 
+export const getDocumentTree = (kbId) => client.get(`/knowledge-bases/${kbId}/tree`);
+export const moveDocument = (kbId, docId, payload) => client.put(`/knowledge-bases/${kbId}/documents/${docId}/move`, payload);
+
 export const getPublicNote = (id) => client.get(`/kb-notes/${id}`);

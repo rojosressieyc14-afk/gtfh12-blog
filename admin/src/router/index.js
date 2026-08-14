@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { useAdminStore } from "../stores/auth";
 import LoginView from "../views/LoginView.vue";
 import DashboardView from "../views/DashboardView.vue";
 import ModerationHitsView from "../views/ModerationHitsView.vue";
@@ -22,12 +23,16 @@ const router = createRouter({
   ]
 });
 
-router.beforeEach((to) => {
-  const token = localStorage.getItem("admin_token");
-  if (to.name !== "login" && !token) {
+router.beforeEach(async (to) => {
+  const store = useAdminStore();
+  if (store.restoring) {
+    await store.fetchProfile();
+  }
+  const loggedIn = store.isLoggedIn;
+  if (to.name !== "login" && !loggedIn) {
     return { name: "login" };
   }
-  if (to.name === "login" && token) {
+  if (to.name === "login" && loggedIn) {
     return { name: "dashboard" };
   }
   document.title = to.meta?.title ? `${to.meta.title} | PulseBlog` : "PulseBlog 管理后台";

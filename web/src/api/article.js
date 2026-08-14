@@ -21,5 +21,6 @@ export const createComment = (id, payload) => client.post(`/articles/${id}/comme
 export const toggleLike = (id) => client.post(`/articles/${id}/like`);
 export const toggleFavorite = (id) => client.post(`/articles/${id}/favorite`);
 export const deleteArticle = (id) => client.delete(`/articles/${id}`);
+export const getArticleStats = (id) => client.get(`/my/articles/${id}/stats`);
 export const listMyLikes = () => client.get("/my/likes");
 export const listMyFavorites = () => client.get("/my/favorites");

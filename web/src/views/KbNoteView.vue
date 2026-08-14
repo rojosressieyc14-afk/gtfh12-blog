@@ -16,7 +16,7 @@
 
       <h1 class="kb-note-title">{{ note.title }}</h1>
 
-      <div class="markdown-body" v-html="renderedContent"></div>
+      <div v-highlight class="markdown-body" v-html="renderedContent"></div>
 
       <div class="kb-note-footer">
         <router-link class="ghost-btn" to="/">返回首页</router-link>
@@ -89,49 +89,6 @@ onMounted(async () => {
   font-size: 2rem;
   line-height: 1.3;
   margin-bottom: 24px;
-}
-
-.markdown-body {
-  line-height: 1.8;
-  font-size: 1.05rem;
-}
-
-.markdown-body h1,
-.markdown-body h2,
-.markdown-body h3 {
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
-}
-
-.markdown-body p {
-  margin: 0.8em 0;
-}
-
-.markdown-body code {
-  background: rgba(255,255,255,0.08);
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-size: 0.9em;
-}
-
-.markdown-body pre code {
-  display: block;
-  padding: 16px;
-  overflow-x: auto;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.3);
-}
-
-.markdown-body img {
-  max-width: 100%;
-  border-radius: 12px;
-}
-
-.markdown-body blockquote {
-  border-left: 3px solid #f97316;
-  padding-left: 16px;
-  margin: 1em 0;
-  color: var(--text-soft);
 }
 
 .kb-note-footer {

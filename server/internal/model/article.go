@@ -50,6 +50,15 @@ type ArticleLike struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+type DailyView struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	ArticleID uint      `gorm:"uniqueIndex:idx_daily_view;not null" json:"articleId"`
+	Date      string    `gorm:"uniqueIndex:idx_daily_view;size:10;not null" json:"date"`
+	Count     int64     `gorm:"not null;default:0" json:"count"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
 type ArticleFavorite struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
 	ArticleID uint      `gorm:"uniqueIndex:idx_article_favorite;not null" json:"articleId"`

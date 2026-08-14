@@ -35,7 +35,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"user": user, "token": token})
+	middleware.SetSessionCookies(c, token)
+	c.JSON(http.StatusCreated, gin.H{"user": user})
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -51,7 +52,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user": user, "token": token})
+	middleware.SetSessionCookies(c, token)
+	c.JSON(http.StatusOK, gin.H{"user": user})
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	middleware.ClearSessionCookies(c)
+	c.JSON(http.StatusOK, gin.H{"message": "已退出登录"})
 }
 
 func (h *AuthHandler) Me(c *gin.Context) {

@@ -11,6 +11,7 @@ func SecurityHeaders() gin.HandlerFunc {
 		c.Header("X-XSS-Protection", "1; mode=block")
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
 		c.Header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://api.deepseek.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self';")
 		c.Next()
 	}
 }

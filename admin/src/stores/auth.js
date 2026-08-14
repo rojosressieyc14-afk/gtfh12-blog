@@ -1,14 +1,14 @@
 import { defineStore } from "pinia";
-import { getMe, login } from "../api/auth";
+import { getMe, login, logout } from "../api/auth";
 
 export const useAdminStore = defineStore("admin-auth", {
   state: () => ({
-    token: localStorage.getItem("admin_token") || "",
     profile: null,
-    loading: false
+    loading: false,
+    restoring: true
   }),
   getters: {
-    isLoggedIn: (state) => Boolean(state.token),
+    isLoggedIn: (state) => Boolean(state.profile),
     isAdmin: (state) => state.profile?.role === "admin"
   },
   actions: {
@@ -19,35 +19,33 @@ export const useAdminStore = defineStore("admin-auth", {
         if (data.user?.role !== "admin") {
           throw new Error("当前账号不是管理员，无法进入后台。");
         }
-
-        this.token = data.token;
         this.profile = data.user;
-        localStorage.setItem("admin_token", data.token);
       } finally {
         this.loading = false;
       }
     },
     async fetchProfile() {
-      if (!this.token) return null;
-
+      this.restoring = true;
       try {
         const { data } = await getMe();
         if (data.user?.role !== "admin") {
-          this.logout();
+          this.profile = null;
           return null;
         }
-
         this.profile = data.user;
         return data.user;
       } catch {
-        this.logout();
+        this.profile = null;
         return null;
+      } finally {
+        this.restoring = false;
       }
     },
-    logout() {
-      this.token = "";
+    async logout() {
+      try {
+        await logout();
+      } catch {}
       this.profile = null;
-      localStorage.removeItem("admin_token");
     }
   }
 });
