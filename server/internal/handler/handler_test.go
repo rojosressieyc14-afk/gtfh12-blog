@@ -220,6 +220,14 @@ func TestLoginRememberCookie(t *testing.T) {
 	if authCookie.MaxAge != 0 {
 		t.Fatalf("login without remember: expected session cookie (MaxAge 0), got %d", authCookie.MaxAge)
 	}
+	nonRememberClaims, nonRememberErr := utils.ParseJWT(authCookie.Value)
+	if nonRememberErr != nil {
+		t.Fatalf("parse non-remember token: %v", nonRememberErr)
+	}
+	nonRememberRemaining := time.Until(nonRememberClaims.ExpiresAt.Time)
+	if nonRememberRemaining > 25*time.Hour {
+		t.Fatalf("non-remember token should expire within 24h, remaining %v", nonRememberRemaining)
+	}
 
 	// 勾选 -> 30 天
 	w = requestJSON(r, "POST", "/api/auth/login", fmt.Sprintf(`{"username":"%s","password":"%s","remember":true}`, username, password))
