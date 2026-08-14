@@ -42,7 +42,7 @@ Author: opencode
     <div class="section-head">
       <div>
         <p class="eyebrow">精选项目</p>
-        <h2>精选项目</h2>
+        <h3>精选项目</h3>
       </div>
       <router-link class="ghost-btn" :to="browseProjectsLink">查看完整作品集</router-link>
     </div>
@@ -79,7 +79,7 @@ Author: opencode
     <div class="section-head">
       <div>
         <p class="eyebrow">最近文章</p>
-        <h2>最近文章</h2>
+        <h3>最近文章</h3>
       </div>
       <router-link class="ghost-btn" :to="articlesLibraryLink">打开文章库</router-link>
     </div>
@@ -212,7 +212,7 @@ onMounted(async () => {
 }
 
 .hero-apple__eyebrow {
-  color: var(--accent);
+  color: #b4530a;
   font-weight: 600;
 }
 
@@ -253,6 +253,10 @@ onMounted(async () => {
   text-decoration: underline;
 }
 
+.hero-apple__actions .text-link {
+  color: #b4530a;
+}
+
 .project-grid--hero .project-card--hero {
   background:
     radial-gradient(circle at top right, rgba(255, 209, 102, 0.12), transparent 32%),
@@ -286,9 +290,9 @@ onMounted(async () => {
 
 ### T4: 验证
 
-- `cd web; npx vite build` 通过。
+- `cd web; npx vite build` 通过（含浅底对比度修复：hero 内 `.text-link`/eyebrow 使用 #b4530a；section-head 用 h3 对齐全局约定）。
 - `grep -rn "recommendedAuthors\|hero-orbit\|portfolio-intro\|studyArticlesLink" web/src` 确认无残留引用。
-- `grep -n "hero-panel" web/src`：确认 `hero-panel` 仍被其他视图使用（如 AuthorView/ProjectsView），本页删除不影响全局类定义（`main.css` 不动）。
+- 注意：`hero-panel` 全局类经核查已无其他视图使用，属 `main.css` 遗留，本次不清理（另行处理）。
 - 手动冒烟：无数据（空库）与有数据两条路径；未登录/已登录 hero CTA 文案切换。
 
 ## Suggested commits
