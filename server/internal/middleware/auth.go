@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	AuthCookieName  = "blog_token"
-	CSRFCookieName  = "blog_csrf"
-	authCookieMaxAge = 7 * 24 * 3600
+	AuthCookieName       = "blog_token"
+	CSRFCookieName       = "blog_csrf"
+	AuthCookieMaxAge     = 7 * 24 * 3600
+	RememberCookieMaxAge = 30 * 24 * 3600
 )
 
 type AuthUser struct {
@@ -70,13 +71,13 @@ func RequireAuth() gin.HandlerFunc {
 	}
 }
 
-func SetSessionCookies(c *gin.Context, token string) {
+func SetSessionCookies(c *gin.Context, token string, maxAge int) {
 	secure := secureRequest(c)
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie(AuthCookieName, token, authCookieMaxAge, "/", "", secure, true)
+	c.SetCookie(AuthCookieName, token, maxAge, "/", "", secure, true)
 	c.SetSameSite(http.SameSiteLaxMode)
 	csrf := randomToken()
-	c.SetCookie(CSRFCookieName, csrf, authCookieMaxAge, "/", "", secure, false)
+	c.SetCookie(CSRFCookieName, csrf, maxAge, "/", "", secure, false)
 }
 
 func ClearSessionCookies(c *gin.Context) {
@@ -93,7 +94,7 @@ func CSRF() gin.HandlerFunc {
 			cookie = randomToken()
 			secure := secureRequest(c)
 			c.SetSameSite(http.SameSiteLaxMode)
-			c.SetCookie(CSRFCookieName, cookie, authCookieMaxAge, "/", "", secure, false)
+			c.SetCookie(CSRFCookieName, cookie, AuthCookieMaxAge, "/", "", secure, false)
 			c.Next()
 			return
 		}

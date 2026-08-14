@@ -20,6 +20,7 @@ func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 type authPayload struct {
 	Username string `json:"username" binding:"required,min=3,max=32"`
 	Password string `json:"password" binding:"required,min=8,max=64"`
+	Remember bool   `json:"remember"`
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -35,7 +36,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	middleware.SetSessionCookies(c, token)
+	middleware.SetSessionCookies(c, token, middleware.AuthCookieMaxAge)
 	c.JSON(http.StatusCreated, gin.H{"user": user})
 }
 
@@ -52,7 +53,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	middleware.SetSessionCookies(c, token)
+	maxAge := middleware.AuthCookieMaxAge
+	if !payload.Remember {
+		maxAge = 0
+	}
+	middleware.SetSessionCookies(c, token, maxAge)
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
