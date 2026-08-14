@@ -146,58 +146,63 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.home-hero__copy {
-  position: relative;
-  z-index: 1;
+.home-section {
+  padding-top: 28px;
 }
 
-.hero-orbit {
-  position: relative;
-  min-height: 320px;
-}
-
-.orbit-card {
-  position: absolute;
+.hero-apple {
+  border-radius: 28px;
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.18), transparent 45%),
+    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.14), transparent 50%),
+    #f4f4f6;
+  color: #1d1d1f;
+  padding: clamp(56px, 10vw, 120px) clamp(24px, 6vw, 80px);
+  text-align: center;
   display: grid;
-  gap: 10px;
-  padding: 18px 20px;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  justify-items: center;
 }
 
-.orbit-card strong,
-.orbit-card p {
-  margin: 0;
+.hero-apple__eyebrow {
+  color: var(--accent);
+  font-weight: 600;
 }
 
-.orbit-card p {
-  color: var(--text-soft);
+.hero-apple__title {
+  max-width: 18ch;
+  margin: 14px 0 0;
+  font-size: clamp(2.75rem, 6vw, 5rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: #1d1d1f;
 }
 
-.orbit-card:nth-child(1) {
-  top: 28px;
-  left: 10%;
+.hero-apple__text {
+  max-width: 52ch;
+  margin: 18px 0 0;
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+  line-height: 1.6;
+  color: #48484a;
 }
 
-.orbit-card:nth-child(2) {
-  right: 8%;
-  top: 128px;
+.hero-apple__actions {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  flex-wrap: wrap;
 }
 
-.orbit-card:nth-child(3) {
-  left: 22%;
-  bottom: 18px;
+.text-link {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
 }
 
-.content-section--split {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.content-split-card {
-  min-width: 0;
+.text-link:hover {
+  text-decoration: underline;
 }
 
 .project-grid--hero .project-card--hero {
@@ -206,103 +211,17 @@ onMounted(async () => {
     rgba(255, 255, 255, 0.06);
 }
 
-.author-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.author-card {
-  display: grid;
-  gap: 14px;
-  padding: 20px;
+.home-outro {
+  padding: 48px 0 8px;
   text-align: center;
-  justify-items: center;
-}
-
-.author-card__avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  overflow: hidden;
-}
-
-.author-card__avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.author-card__avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--soft);
-}
-
-.author-card__body {
-  display: grid;
-  gap: 6px;
-}
-
-.author-card__body h4 {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-.author-card__role {
-  color: var(--soft);
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-.author-card__role--empty {
-  font-style: italic;
-}
-
-.author-card .tag-row {
-  justify-content: center;
-}
-
-@media (max-width: 960px) {
-  .content-section--split {
-    grid-template-columns: 1fr;
-  }
-
-  .orbit-card {
-    position: relative;
-    inset: auto;
-  }
-
-  .hero-orbit {
-    display: grid;
-    gap: 14px;
-    min-height: auto;
-  }
-}
-
-@media (max-width: 768px) {
-  .author-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .orbit-card {
-    padding: 14px 16px;
-  }
 }
 
 @media (max-width: 480px) {
-  .hero-actions {
+  .hero-apple__actions {
     flex-direction: column;
   }
 
-  .hero-actions .solid-btn,
-  .hero-actions .ghost-btn {
+  .hero-apple__actions .solid-btn {
     width: 100%;
     justify-content: center;
   }
