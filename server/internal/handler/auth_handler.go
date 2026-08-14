@@ -53,9 +53,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	maxAge := middleware.AuthCookieMaxAge
-	if !payload.Remember {
-		maxAge = 0
+	maxAge := 0
+	if payload.Remember {
+		maxAge = middleware.RememberCookieMaxAge
 	}
 	middleware.SetSessionCookies(c, token, maxAge)
 	c.JSON(http.StatusOK, gin.H{"user": user})
