@@ -1,79 +1,23 @@
 <template>
-  <section class="hero-panel hero-panel--portfolio home-hero">
-    <div class="hero-copy home-hero__copy">
-      <p class="eyebrow">个人作品集平台</p>
-      <h2>{{ heroTitle }}</h2>
-      <p class="hero-text">{{ heroText }}</p>
-
-      <div class="hero-actions">
+  <section class="hero-apple">
+    <div class="hero-apple__inner">
+      <p class="eyebrow hero-apple__eyebrow">PulseBlog</p>
+      <h2 class="hero-apple__title">{{ heroTitle }}</h2>
+      <p class="hero-apple__text">{{ heroText }}</p>
+      <div class="hero-apple__actions">
         <router-link class="solid-btn" :to="userStore.isLoggedIn ? '/editor' : '/auth'">
           {{ userStore.isLoggedIn ? "开始写作" : "注册开始" }}
         </router-link>
-        <router-link class="ghost-btn" :to="articlesLibraryLink">文章库</router-link>
-        <router-link class="ghost-btn" :to="browseProjectsLink">项目库</router-link>
-        <router-link class="ghost-btn" :to="featuredAuthorLink">作者页</router-link>
+        <router-link class="text-link" :to="articlesLibraryLink">打开文章库</router-link>
       </div>
-
-      <div class="hero-metrics">
-        <article class="hero-metric">
-          <strong>{{ total }}</strong>
-          <span>公开文章</span>
-        </article>
-        <article class="hero-metric">
-          <strong>{{ featuredProjects.length }}</strong>
-          <span>精选项目</span>
-        </article>
-        <article class="hero-metric">
-          <strong>{{ tags.length }}</strong>
-          <span>内容标签</span>
-        </article>
-      </div>
-
-      <div v-if="siteOwner.skills?.length" class="tag-row tag-row--hero">
-        <span v-for="skill in siteOwner.skills.slice(0, 6)" :key="skill" class="tag-chip">{{ skill }}</span>
-      </div>
-    </div>
-
-    <div class="hero-orbit hero-orbit--portfolio">
-      <article class="orbit-card">
-        <strong>项目案例</strong>
-        <p>已完成工作的可读、可比较、可证明的公开案例。</p>
-      </article>
-      <article class="orbit-card">
-        <strong>学习沉淀</strong>
-        <p>笔记、总结和复盘的长期归档，持续增长的内容资产。</p>
-      </article>
-      <article class="orbit-card">
-        <strong>公开表达</strong>
-        <p>项目、文章和个人品牌汇聚在同一入口的能力画像。</p>
-      </article>
     </div>
   </section>
 
-  <section class="portfolio-intro">
-    <article class="panel-card portfolio-card portfolio-card--wide">
-      <p class="eyebrow">定位</p>
-      <h3>项目案例、学习笔记与公开输出的长期作品展示面。</h3>
-    </article>
-
-    <article class="panel-card portfolio-card">
-      <p class="eyebrow">项目</p>
-      <h3>展示你真正做过什么</h3>
-      <router-link class="ghost-btn" :to="ownerProjectsLink">查看项目案例</router-link>
-    </article>
-
-    <article class="panel-card portfolio-card">
-      <p class="eyebrow">学习</p>
-      <h3>沉淀你的成长轨迹</h3>
-      <router-link class="ghost-btn" :to="studyArticlesLink">查看学习内容</router-link>
-    </article>
-  </section>
-
-  <section class="content-section">
+  <section class="content-section home-section">
     <div class="section-head">
       <div>
         <p class="eyebrow">精选项目</p>
-        <h3>精选项目</h3>
+        <h2>精选项目</h2>
       </div>
       <router-link class="ghost-btn" :to="browseProjectsLink">查看完整作品集</router-link>
     </div>
@@ -106,160 +50,49 @@
     </div>
   </section>
 
-  <section v-if="recommendedAuthors.length" class="content-section">
+  <section class="content-section home-section">
     <div class="section-head">
       <div>
-        <p class="eyebrow">推荐作者</p>
-        <h3>平台上的活跃创作者</h3>
-      </div>
-    </div>
-
-    <div class="author-grid">
-      <article v-for="item in recommendedAuthors" :key="`author-${item.id}`" class="author-card panel-card">
-        <div class="author-card__avatar">
-          <img v-if="item.avatar" :src="toAssetUrl(item.avatar)" :alt="item.username" />
-          <div v-else class="author-card__avatar-placeholder">{{ item.username?.charAt(0) || '?' }}</div>
-        </div>
-        <div class="author-card__body">
-          <h4>{{ item.username }}</h4>
-          <p v-if="item.headline" class="author-card__role">{{ item.headline }}</p>
-          <p v-else class="author-card__role author-card__role--empty">暂无简介</p>
-          <div v-if="item.skills?.length" class="tag-row">
-            <span v-for="skill in item.skills.slice(0, 3)" :key="skill" class="tag-chip">{{ skill }}</span>
-          </div>
-        </div>
-        <router-link class="solid-btn" :to="`/author/${item.id}`">查看主页</router-link>
-      </article>
-    </div>
-  </section>
-
-  <section class="content-section content-section--split">
-    <div class="content-split-card panel-card">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">推荐内容</p>
-          <h3>推荐内容</h3>
-        </div>
-        <router-link class="ghost-btn" :to="articlesLibraryLink">全部文章</router-link>
-      </div>
-      <div class="article-grid article-grid--single">
-        <ArticleCard v-for="item in featuredArticles" :key="`featured-${item.id}`" :item="item" />
-      </div>
-    </div>
-
-    <div class="content-split-card panel-card">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">学习笔记</p>
-          <h3>最近的学习记录</h3>
-        </div>
-        <router-link class="ghost-btn" :to="studyArticlesLink">只看学习内容</router-link>
-      </div>
-      <div class="article-grid article-grid--single">
-        <ArticleCard v-for="item in learningArticles" :key="`learning-${item.id}`" :item="item" />
-      </div>
-    </div>
-  </section>
-
-  <section class="content-section">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">探索</p>
-        <h3>全部文章</h3>
+        <p class="eyebrow">最近文章</p>
+        <h2>最近文章</h2>
       </div>
       <router-link class="ghost-btn" :to="articlesLibraryLink">打开文章库</router-link>
     </div>
 
-    <div class="filter-row">
-      <input
-        v-model="keyword"
-        class="field-input search-input"
-        placeholder="搜索标题或摘要"
-        @keyup.enter="goToPage(1)"
-      />
-      <select v-model="selectedCategory" class="field-input filter-select-home" @change="goToPage(1)">
-        <option value="">全部分类</option>
-        <option v-for="item in categories" :key="item.id" :value="item.id">{{ item.name }}</option>
-      </select>
-      <select v-model="selectedTag" class="field-input filter-select-home" @change="goToPage(1)">
-        <option value="">全部标签</option>
-        <option v-for="item in tags" :key="item.id" :value="item.name">{{ item.name }}</option>
-      </select>
-      <button class="ghost-btn" @click="resetFilters">重置筛选</button>
+    <div v-if="featuredArticles.length" class="article-grid">
+      <ArticleCard v-for="item in featuredArticles" :key="`featured-${item.id}`" :item="item" />
     </div>
-
-    <div class="article-grid">
-      <ArticleCard v-for="item in articles" :key="item.id" :item="item" />
-    </div>
-
-    <div v-if="!articles.length" class="empty-panel">
+    <div v-else class="empty-panel">
       <h4>还没有已发布文章</h4>
       <p>写一篇文章来开始你的内容积累。</p>
     </div>
+  </section>
 
-    <div class="pager-row">
-      <button class="ghost-btn" :disabled="page <= 1" @click="goToPage(page - 1)">上一页</button>
-      <span>第 {{ page }} / {{ totalPages }} 页</span>
-      <button class="ghost-btn" :disabled="page >= totalPages" @click="goToPage(page + 1)">下一页</button>
-    </div>
+  <section class="home-outro">
+    <router-link class="text-link" :to="userStore.isLoggedIn ? '/editor' : '/auth'">
+      {{ userStore.isLoggedIn ? "开始写作 →" : "注册一个账号 →" }}
+    </router-link>
   </section>
 </template>
 
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
 import { listArticles, listTrendingArticles } from "../api/article";
-import { getMetadata } from "../api/meta";
 import { listProjects } from "../api/project";
 import { useUserStore } from "../stores/user";
 import ArticleCard from "../components/ArticleCard.vue";
 import { toAssetUrl } from "../utils/asset";
-import { getAuthorProfile, getRecommendedAuthors } from "../api/profile";
+import { getAuthorProfile } from "../api/profile";
 
 const userStore = useUserStore();
-const router = useRouter();
-const keyword = ref("");
 const articles = ref([]);
 const trendingArticles = ref([]);
 const featuredProjects = ref([]);
-const recommendedAuthors = ref([]);
-const categories = ref([]);
-const tags = ref([]);
-const selectedCategory = ref("");
-const selectedTag = ref("");
-const page = ref(1);
-const pageSize = 9;
-const total = ref(0);
 const ownerProfile = ref(null);
 
-const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
 const siteOwner = computed(() => ownerProfile.value || userStore.profile || {});
-const featuredAuthorLink = computed(() => (siteOwner.value?.id ? `/author/${siteOwner.value.id}` : "/auth"));
 const browseProjectsLink = computed(() => ({ path: "/projects", query: { sort: "featured" } }));
-const ownerProjectsLink = computed(() => ({
-  path: "/projects",
-  query: siteOwner.value?.id
-    ? {
-        authorId: String(siteOwner.value.id),
-        authorName: siteOwner.value.username || "",
-        sort: "featured"
-      }
-    : { sort: "featured" }
-}));
 const articlesLibraryLink = computed(() => ({ path: "/articles", query: { sort: "latest" } }));
-const studyArticlesLink = computed(() => {
-  const matchedTag = tags.value.find((item) => isStudyText(item.name || ""));
-  const matchedCategory = categories.value.find((item) => isStudyText(item.name || ""));
-
-  return {
-    path: "/articles",
-    query: {
-      ...(matchedCategory?.id ? { categoryId: String(matchedCategory.id) } : {}),
-      ...(matchedTag?.name ? { tag: matchedTag.name } : {}),
-      sort: "latest"
-    }
-  };
-});
 const heroTitle = computed(() => siteOwner.value?.headline || "把你的博客做成作品集、学习归档和长期表达入口");
 const heroText = computed(() => {
   if (siteOwner.value?.bio) return siteOwner.value.bio;
@@ -271,40 +104,9 @@ const featuredArticles = computed(() => {
   return articles.value.slice(0, 3);
 });
 
-const learningArticles = computed(() => {
-  const source = [...articles.value, ...trendingArticles.value];
-  const unique = source.filter((item, index, list) => list.findIndex((entry) => entry.id === item.id) === index);
-  const matched = unique.filter((item) => isStudyArticle(item));
-  if (matched.length) return matched.slice(0, 3);
-  return unique.slice(0, 3);
-});
-
-function isStudyText(value) {
-  const haystack = String(value).toLowerCase();
-  return ["study", "note", "docs", "source", "review", "summary", "学习", "笔记", "源码", "总结", "复盘"].some((word) =>
-    haystack.includes(word)
-  );
-}
-
-function isStudyArticle(item) {
-  const haystack = [item.title, item.summary, item.category?.name, ...(item.tags || []).map((tag) => tag.name)]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  return isStudyText(haystack);
-}
-
 async function fetchArticles() {
-  const { data } = await listArticles({
-    keyword: keyword.value,
-    page: page.value,
-    pageSize,
-    categoryId: selectedCategory.value,
-    tag: selectedTag.value
-  });
+  const { data } = await listArticles({ page: 1, pageSize: 9 });
   articles.value = data.items || [];
-  total.value = data.pagination?.total || 0;
 }
 
 async function fetchTrending() {
@@ -315,21 +117,6 @@ async function fetchTrending() {
 async function fetchProjects() {
   const { data } = await listProjects({ page: 1, pageSize: 3, featured: true });
   featuredProjects.value = data.items || [];
-}
-
-async function fetchRecommendedAuthors() {
-  try {
-    const { data } = await getRecommendedAuthors();
-    recommendedAuthors.value = data.items || [];
-  } catch {
-    recommendedAuthors.value = [];
-  }
-}
-
-async function fetchMetadata() {
-  const { data } = await getMetadata();
-  categories.value = data.categories || [];
-  tags.value = data.tags || [];
 }
 
 async function fetchOwnerProfile(id) {
@@ -345,18 +132,6 @@ async function fetchOwnerProfile(id) {
   }
 }
 
-async function goToPage(nextPage) {
-  page.value = nextPage;
-  await fetchArticles();
-}
-
-async function resetFilters() {
-  keyword.value = "";
-  selectedCategory.value = "";
-  selectedTag.value = "";
-  await goToPage(1);
-}
-
 watch(
   () => userStore.profile?.id,
   (id) => {
@@ -366,7 +141,7 @@ watch(
 );
 
 onMounted(async () => {
-  await Promise.all([fetchArticles(), fetchTrending(), fetchMetadata(), fetchProjects(), fetchRecommendedAuthors()]);
+  await Promise.all([fetchArticles(), fetchTrending(), fetchProjects()]);
 });
 </script>
 
