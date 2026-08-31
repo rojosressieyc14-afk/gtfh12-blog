@@ -962,6 +962,8 @@ select.field-input {
   line-height: 1.8;
   font-size: 16px;
   color: rgba(250, 246, 239, 0.92);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .markdown-body:lang(en) {
   line-height: 1.6;
@@ -1022,6 +1024,8 @@ select.field-input {
   font-size: 14px;
   line-height: 1.6;
   border: 1px solid rgba(255,255,255,0.08);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 .markdown-body code {
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
