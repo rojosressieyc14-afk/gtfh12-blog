@@ -1,109 +1,138 @@
+<div align="center">
+
 # PulseBlog
 
-求职导向的个人品牌站与创作平台。把你的技术积累整理成真正能对外展示的作品集。
+**求职导向的个人品牌站与创作平台**
 
-> Go + Vue 3 全栈，支持文章/项目管理、AI 模拟面试、知识库笔记、向量检索、AI 审校。
+把你的技术积累整理成真正能对外展示的作品集。
 
-## 功能一览
+<br/>
 
-### 📝 文章系统
-- 富文本编辑器 + Markdown 支持
-- 草稿 → 提交 → 审核 → 发布 工作流
-- 分类 / 标签 / 私有文章 / 公开浏览
-- 收藏 / 点赞 / 评论
+![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat-square&logo=go&logoColor=white)
+![Vue](https://img.shields.io/badge/Vue-3-4FC08D?style=flat-square&logo=vue.js&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
-### 📦 项目管理
-- 独立作品展示页（技术栈、角色、难点、成果）
-- 与文章相同的审核工作流
+</div>
 
-### 🧠 知识库笔记
-- Markdown 笔记编辑器，支持分类和标签
-- 公开/私密切换，公开笔记可独立访问 `/kb-note/:id`
-- AI 向量检索（基于 Qdrant + DeepSeek Embedding）
-- 无 API Key 时自动降级，不影响笔记创建和编辑
+---
 
-### 🤖 AI 面试官
-- 输入目标职位 + 上传简历
-- DeepSeek 驱动多轮面试
-- 逐题评分 + 最终评分报告
+## Features
 
-### 🛡️ AI 审校
-- 敏感词检测
-- 内容合规审查（文章/项目提交自动触发）
+<table>
+<tr>
+<td width="50%">
 
-### 👤 个人中心
-- 创作工作台 + 设置分区
-- 创作数据统计（文章/项目/知识库/浏览量）
-- 最近动态时间线
+### Content System
+- Rich text editor + Markdown support
+- Draft → Submit → Review → Publish workflow
+- Categories / Tags / Private articles
+- Likes / Favorites / Comments
 
-### 🔧 后台管理面板
-- Dashboard 全局统计
-- 文章/项目审核队列
-- 用户管理、评论管理、操作日志
-- 敏感词库、上传文件管理
-- AI 审校结果查看
+### Project Showcase
+- Independent project pages (tech stack, role, challenges, results)
+- Same review workflow as articles
 
-## 技术栈
+### Knowledge Base
+- Markdown note editor with categories & tags
+- Public / Private toggle
+- AI vector search (Qdrant + DeepSeek Embedding)
+- Graceful degradation without API key
 
-| 层 | 技术 |
-|---|---|
-| **前端** | Vue 3 + Pinia + Vue Router + Vite |
-| **后台管理** | Vue 3 + Pinia + Vue Router + Vite |
-| **后端** | Go + Gin + GORM |
-| **数据库** | MySQL 8.0 |
-| **向量数据库** | Qdrant |
-| **AI 集成** | DeepSeek API (Chat + Embedding) |
-| **认证** | JWT (RSA256) |
+</td>
+<td width="50%">
 
-## 架构
+### AI Interview Coach
+- Input target position + upload resume
+- DeepSeek-powered multi-round interview
+- Per-question scoring + final report
+
+### AI Moderation
+- Sensitive word detection (trie-based)
+- Content compliance review (auto-triggered on submit)
+- Auto-ban on repeated violations
+
+### Admin Panel
+- Dashboard with global statistics
+- Article / Project review queues
+- User management, comments, audit logs
+- Sensitive word library, upload management
+
+</td>
+</tr>
+</table>
+
+---
+
+## Architecture
 
 ```
-┌──────────────┐   ┌───────────────┐
-│  Web 前端     │   │  Admin 后台    │
-│  Vue 3 + Vite │   │  Vue 3 + Vite │
-└──────┬───────┘   └───────┬───────┘
-       └────────┬──────────┘
-                │ JWT Auth
-       ┌────────▼──────────┐   ┌──────────────┐
-       │  API Server        │   │  Qdrant       │
-       │  Go + Gin + GORM   │   │  向量数据库    │
-       └────────┬──────────┘   └──────────────┘
-                │
-       ┌────────▼──────────┐
-       │  MySQL 8.0         │
-       └───────────────────┘
+                    ┌─────────────────────────────────────┐
+                    │           Client Layer               │
+                    │  ┌──────────┐    ┌────────────────┐  │
+                    │  │   Web    │    │     Admin      │  │
+                    │  │ Vue 3    │    │     Vue 3      │  │
+                    │  │ + Vite   │    │     + Vite     │  │
+                    │  └────┬─────┘    └───────┬────────┘  │
+                    └───────┼──────────────────┼───────────┘
+                            │                  │
+                            │    JWT (RSA256)  │
+                            │    + CSRF Cookie │
+                    ┌───────▼──────────────────▼───────────┐
+                    │           API Server                  │
+                    │     Go + Gin + GORM                   │
+                    │                                       │
+                    │  ┌─────────┐  ┌───────────────────┐  │
+                    │  │  Auth   │  │  Moderation (Trie) │  │
+                    │  │  Rate   │  │  Embedding (AI)    │  │
+                    │  │  Limit  │  │  Vector Search     │  │
+                    │  └─────────┘  └───────────────────┘  │
+                    └───────┬──────────────┬───────────────┘
+                            │              │
+                    ┌───────▼──────┐ ┌─────▼──────┐
+                    │   MySQL 8.0  │ │   Qdrant   │
+                    │   (Primary)  │ │  (Vector)  │
+                    └──────────────┘ └────────────┘
 ```
 
-## 快速开始
+---
 
-### 前置要求
+## Quick Start
 
-- Go 1.21+
-- Node.js 18+
-- MySQL 8.0+
-- Qdrant（可选，知识库 AI 检索需要）
+### Prerequisites
 
-### 一键启动
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Go | 1.21+ | Backend API |
+| Node.js | 18+ | Frontend build |
+| MySQL | 8.0+ | Primary database |
+| Qdrant | Latest | Vector search (optional) |
+
+### One-Click Launch
 
 ```powershell
 .\start.ps1
 ```
 
-脚本自动启动：Qdrant → MySQL → 后端(8080) → 前端(5173) → 管理后台(5174)
+Auto-starts: Qdrant → MySQL → Backend (:8080) → Frontend (:5173) → Admin (:5174)
 
-### 手动启动
+### Manual Setup
 
-#### 1. 后端
+<details>
+<summary><strong>Backend</strong></summary>
 
 ```bash
-cp server/.env.example server/.env
-# 编辑 .env 填入数据库连接
 cd server
+cp .env.example .env   # Edit with your DB config
 go mod download
-go run cmd/api/main.go
+go run ./cmd/api
 ```
 
-#### 2. 前端
+</details>
+
+<details>
+<summary><strong>Frontend</strong></summary>
 
 ```bash
 cd web
@@ -111,7 +140,10 @@ npm install
 npm run dev
 ```
 
-#### 3. 后台管理
+</details>
+
+<details>
+<summary><strong>Admin Panel</strong></summary>
 
 ```bash
 cd admin
@@ -119,51 +151,117 @@ npm install
 npm run dev
 ```
 
-#### 4. Qdrant（可选，知识库需要）
+</details>
 
-```bash
-cd qdrant
-.\qdrant.exe
-```
+<details>
+<summary><strong>AI Features (Optional)</strong></summary>
 
-#### 5. AI 功能（可选）
-
-在 `server/.env` 中配置：
+Add to `server/.env`:
 
 ```env
 DEEPSEEK_API_KEY=sk-your-key
 DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
 ```
 
-## 目录结构
+</details>
+
+---
+
+## Project Structure
 
 ```
-├── server/              Go 后端 API
-│   ├── cmd/api/         入口
-│   ├── internal/
-│   │   ├── config/      配置
-│   │   ├── database/    数据库连接与迁移
-│   │   ├── handler/     HTTP 处理器
-│   │   ├── middleware/  中间件（JWT、限流、日志）
-│   │   ├── model/       数据模型
-│   │   ├── service/     业务逻辑
-│   │   └── utils/       工具
-│   └── Dockerfile
-├── web/                 Vue 3 前端
+pulseblog/
+├── server/                  # Go backend
+│   ├── cmd/api/             # Entry point
+│   └── internal/
+│       ├── config/          # Configuration
+│       ├── database/        # DB connection & migrations
+│       ├── handler/         # HTTP handlers
+│       ├── middleware/       # Auth, rate limit, logging
+│       ├── model/           # Data models
+│       └── service/         # Business logic
+│
+├── web/                     # Vue 3 frontend
 │   └── src/
-│       ├── api/         API 客户端
-│       ├── views/       页面组件
-│       ├── components/  公共组件
-│       └── router/      路由
-├── admin/               Vue 3 后台管理
+│       ├── api/             # API client
+│       ├── views/           # Page components
+│       ├── components/      # Shared components
+│       └── router/          # Route definitions
+│
+├── admin/                   # Vue 3 admin panel
 │   └── src/
-│       ├── views/       管理页面
-│       └── components/  面板组件
-├── qdrant/              Qdrant 向量数据库（本地）
-├── docs/                设计和实现文档
+│       ├── views/           # Admin pages
+│       ├── components/      # Dashboard components
+│       ├── composables/     # Shared composables
+│       └── utils/           # Utility functions
+│
+├── qdrant/                  # Local vector DB
+├── archive/                 # Archived docs & logs
 └── docker-compose.yml
 ```
 
+---
+
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Frontend** | Vue 3 + Pinia + Vue Router | SPA with state management |
+| **Build** | Vite 5 | Fast dev server & bundler |
+| **Backend** | Go + Gin | High-performance HTTP framework |
+| **ORM** | GORM | Type-safe database operations |
+| **Database** | MySQL 8.0 | Primary data store |
+| **Vector DB** | Qdrant | AI-powered semantic search |
+| **AI** | DeepSeek API | Chat + Embedding models |
+| **Auth** | JWT (RSA256) + CSRF | Secure double-submit cookie pattern |
+
+---
+
+## Performance Optimizations
+
+Recent audit-driven improvements:
+
+| Optimization | Impact |
+|-------------|--------|
+| Trie-based sensitive word matching | O(n) single-pass scan vs O(n×m) per word |
+| Batch tag synchronization | N queries → 1 IN query + bulk insert |
+| Batch reaction summary loading | 4N queries → 4 queries per list page |
+| Dashboard stats aggregation | 11 COUNT queries → 3聚合 queries |
+| Rate limiter lifecycle | Proper goroutine cleanup with Stop() |
+
+---
+
+## Environment Variables
+
+```env
+# Database
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your-password
+DB_NAME=blog_system
+
+# Auth
+JWT_SECRET=your-jwt-secret
+DEFAULT_ADMIN_USERNAME=admin
+DEFAULT_ADMIN_PASSWORD=your-admin-password
+
+# CORS
+WEB_ORIGIN=http://localhost:5173
+ADMIN_ORIGIN=http://localhost:5174
+
+# AI (Optional)
+DEEPSEEK_API_KEY=sk-your-key
+DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
+QDRANT_ADDR=http://localhost:6333
+
+# App
+GIN_MODE=debug
+UPLOAD_DIR=./uploads
+```
+
+---
+
 ## License
 
-MIT
+[MIT](LICENSE)
