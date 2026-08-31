@@ -1,23 +1,36 @@
 <template>
   <section class="profile-page">
-    <div class="profile-layout">
-      <article class="panel-card profile-main-card">
-        <p class="eyebrow">个人资料工作台</p>
-        <h2>把你的个人页面整理成真正能对外展示的品牌名片。</h2>
-        <p class="detail-summary">
+    <section class="uc-hero uc-hero--profile">
+      <div class="uc-hero__copy">
+        <p class="eyebrow uc-hero__eyebrow">个人资料</p>
+        <h2 class="uc-hero__title">把你的个人页面整理成真正能对外展示的品牌名片。</h2>
+        <p class="uc-hero__text">
           这些字段会影响首页、作者页和关于页的展示效果，也会决定别人第一次看到你时留下什么印象。
         </p>
+      </div>
+      <div class="uc-hero__stats">
+        <article class="uc-hero__stat uc-hero__stat--progress">
+          <strong>{{ completionRate }}%</strong>
+          <span>资料完整度</span>
+        </article>
+      </div>
+    </section>
 
-        <section class="profile-progress-card">
+    <div class="profile-progress-bar-shell">
+      <div class="profile-progress-bar">
+        <span :style="{ width: `${completionRate}%` }"></span>
+      </div>
+      <p class="profile-progress-hint">把身份、联系方式和作品集相关字段补齐后，整个站点会更像一份完整的线上简历。</p>
+    </div>
+
+    <div class="profile-layout">
+      <article class="profile-main-card">
+        <div class="section-head">
           <div>
-            <strong>{{ completionRate }}%</strong>
-            <p>资料完整度</p>
+            <p class="eyebrow">模板预设</p>
+            <h3>快速填充</h3>
           </div>
-          <div class="profile-progress-bar">
-            <span :style="{ width: `${completionRate}%` }"></span>
-          </div>
-          <p class="detail-summary">把身份、联系方式和作品集相关字段补齐后，整个站点会更像一份完整的线上简历。</p>
-        </section>
+        </div>
 
         <section class="profile-preset-grid">
           <button class="preset-card" type="button" @click="applyPreset('frontend')">
@@ -143,7 +156,7 @@
           </label>
 
           <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
-        <div class="inline-actions">
+          <div class="inline-actions">
             <button class="solid-btn profile-btn" :disabled="saving || uploading">
               {{ saving ? "保存中..." : "保存资料" }}
             </button>
@@ -153,8 +166,7 @@
         </form>
       </article>
 
-      <aside class="panel-card profile-side-card">
-        <p class="eyebrow">预览</p>
+      <aside class="profile-side-card">
         <div class="brand-preview">
           <div class="brand-preview__avatar">
             <img v-if="form.avatar" :src="toAssetUrl(form.avatar)" alt="avatar" />
@@ -363,29 +375,89 @@ function applyPreset(kind) {
 </script>
 
 <style scoped>
-.profile-progress-card {
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.uc-hero {
+  border-radius: 28px;
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.18), transparent 45%),
+    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.14), transparent 50%),
+    #f4f4f6;
+  color: #1d1d1f;
+  padding: clamp(32px, 6vw, 56px) clamp(24px, 4vw, 48px);
   display: grid;
-  gap: 10px;
-  margin: 18px 0 22px;
-  padding: 18px;
-  border-radius: 22px;
-  border: 1px solid rgba(249, 115, 22, 0.2);
-  background: rgba(249, 115, 22, 0.08);
+  grid-template-columns: minmax(0, 1.4fr) minmax(200px, 0.6fr);
+  gap: 32px;
+  align-items: center;
 }
 
-.profile-progress-card strong {
-  font-size: 2rem;
+.uc-hero__copy {
+  display: grid;
+  gap: 12px;
 }
 
-.profile-progress-card p {
+.uc-hero__eyebrow {
+  color: #b4530a;
+  font-weight: 600;
+}
+
+.uc-hero__title {
   margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.12;
+  color: #1d1d1f;
+}
+
+.uc-hero__text {
+  margin: 0;
+  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
+  line-height: 1.6;
+  color: #48484a;
+}
+
+.uc-hero__stats {
+  display: flex;
+  gap: 12px;
+}
+
+.uc-hero__stat {
+  padding: 22px 28px;
+  border-radius: 22px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  flex: 1;
+}
+
+.uc-hero__stat strong {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  line-height: 1.2;
+}
+
+.uc-hero__stat span {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.profile-progress-bar-shell {
+  display: grid;
+  gap: 8px;
 }
 
 .profile-progress-bar {
   height: 10px;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(15, 23, 42, 0.16);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .profile-progress-bar span {
@@ -393,13 +465,32 @@ function applyPreset(kind) {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #f97316, #fb7185);
+  transition: width 0.4s ease;
+}
+
+.profile-progress-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.7fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.profile-main-card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .profile-preset-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
-  margin-bottom: 24px;
 }
 
 .preset-card {
@@ -407,27 +498,121 @@ function applyPreset(kind) {
   gap: 8px;
   text-align: left;
   padding: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 20px;
-  background: rgba(15, 23, 42, 0.38);
-  color: inherit;
+  background: rgba(255, 255, 255, 0.7);
+  color: #1d1d1f;
   cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .preset-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(249, 115, 22, 0.34);
-  background: rgba(15, 23, 42, 0.52);
+  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
 }
 
-.preset-card p,
+.preset-card .eyebrow {
+  color: #b4530a;
+}
+
 .preset-card strong {
+  font-size: 1rem;
+  color: #1d1d1f;
+}
+
+.preset-card p {
   margin: 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.profile-side-card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: sticky;
+  top: 24px;
+}
+
+.brand-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+
+.brand-preview__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: #f97316;
+}
+
+.brand-preview__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.brand-preview h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #1d1d1f;
+}
+
+.brand-preview__meta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.brand-preview__headline {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.brand-preview__motto {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #b4530a;
+  font-style: italic;
+}
+
+.brand-preview__bio {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.brand-preview .tag-row {
+  justify-content: center;
+}
+
+.profile-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.8rem;
+  color: #9ca3af;
 }
 
 .profile-side-section {
-  margin-top: 24px;
   display: grid;
   gap: 10px;
 }
@@ -441,34 +626,50 @@ function applyPreset(kind) {
 .profile-checklist {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .profile-checklist span {
-  padding: 8px 12px;
+  padding: 6px 12px;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.12);
-  color: rgba(226, 232, 240, 0.72);
+  font-size: 0.82rem;
+  background: rgba(0, 0, 0, 0.04);
+  color: #6b7280;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .profile-checklist span.complete {
-  background: rgba(249, 115, 22, 0.16);
-  color: #fff7ed;
+  background: rgba(22, 163, 74, 0.1);
+  border-color: rgba(22, 163, 74, 0.2);
+  color: #166534;
+}
+
+.profile-btn {
+  min-width: 140px;
+}
+
+.profile-link {
+  white-space: nowrap;
 }
 
 @media (max-width: 980px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-side-card {
+    position: static;
+  }
+
   .profile-preset-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .profile-progress-card {
-    padding: 14px;
-  }
-
-  .profile-progress-card strong {
-    font-size: 1.6rem;
+  .uc-hero {
+    grid-template-columns: 1fr;
+    padding: 28px 20px;
   }
 
   .profile-avatar-block {
@@ -502,13 +703,13 @@ function applyPreset(kind) {
 }
 
 @media (max-width: 480px) {
-  .profile-side-card {
-    padding: 18px;
+  .brand-preview {
+    padding: 20px 16px;
   }
 
   .profile-checklist span {
-    font-size: 0.82rem;
-    padding: 6px 10px;
+    font-size: 0.78rem;
+    padding: 5px 10px;
   }
 
   .profile-link-list {

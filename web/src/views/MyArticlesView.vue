@@ -1,25 +1,20 @@
 <template>
-  <section class="content-section">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">创作空间</p>
-        <h3>我的文章</h3>
+  <section class="uc-articles">
+    <section class="uc-hero uc-hero--articles">
+      <div class="uc-hero__copy">
+        <p class="eyebrow uc-hero__eyebrow">创作空间</p>
+        <h2 class="uc-hero__title">我的文章</h2>
+        <p class="uc-hero__text">统一管理草稿、已发布和审核中的内容，持续输出有价值的文字。</p>
       </div>
-      <router-link class="solid-btn" to="/editor">写新文章</router-link>
-    </div>
+      <div class="uc-hero__stats">
+        <article class="uc-hero__stat">
+          <strong>{{ total }}</strong>
+          <span>全部文章</span>
+        </article>
+      </div>
+    </section>
 
-    <div class="services-grid">
-      <article class="panel-card service-card">
-        <p class="eyebrow">管理</p>
-        <h4>统一整理草稿、已发布和审核中的内容</h4>
-      </article>
-      <article class="panel-card service-card">
-        <p class="eyebrow">建议</p>
-        <h4>优先补齐摘要、标签和分类</h4>
-      </article>
-    </div>
-
-    <p v-if="errorMessage" class="error-text" style="margin-bottom:12px">{{ errorMessage }}</p>
+    <div v-if="errorMessage" class="error-text" style="margin-bottom:12px">{{ errorMessage }}</div>
 
     <div v-if="articles.length" class="article-grid">
       <article v-for="item in articles" :key="item.id" class="article-card article-card--mine">
@@ -117,8 +112,7 @@ function drawChart() {
 
   ctx.clearRect(0, 0, w, h);
 
-  // Grid lines
-  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  ctx.strokeStyle = "rgba(0,0,0,0.06)";
   ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
     const y = pad.top + (chartH / 4) * i;
@@ -126,13 +120,12 @@ function drawChart() {
     ctx.moveTo(pad.left, y);
     ctx.lineTo(w - pad.right, y);
     ctx.stroke();
-    ctx.fillStyle = "rgba(246,241,234,0.3)";
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
     ctx.font = "10px sans-serif";
     ctx.textAlign = "right";
     ctx.fillText(String(Math.round(max - (max / 4) * i)), pad.left - 4, y + 4);
   }
 
-  // Line
   if (points.length < 2) return;
   ctx.beginPath();
   ctx.strokeStyle = "#ff8a4c";
@@ -144,7 +137,6 @@ function drawChart() {
   }
   ctx.stroke();
 
-  // Dots
   for (const p of points) {
     ctx.beginPath();
     ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
@@ -152,8 +144,7 @@ function drawChart() {
     ctx.fill();
   }
 
-  // Date labels
-  ctx.fillStyle = "rgba(246,241,234,0.3)";
+  ctx.fillStyle = "rgba(0,0,0,0.3)";
   ctx.font = "10px sans-serif";
   ctx.textAlign = "center";
   const labels = statsData.value.map((d) => d.date.slice(5));
@@ -203,6 +194,133 @@ onMounted(loadMine);
 </script>
 
 <style scoped>
+.uc-articles {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.uc-hero {
+  border-radius: 28px;
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.18), transparent 45%),
+    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.14), transparent 50%),
+    #f4f4f6;
+  color: #1d1d1f;
+  padding: clamp(32px, 6vw, 56px) clamp(24px, 4vw, 48px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(200px, 0.6fr);
+  gap: 32px;
+  align-items: center;
+}
+
+.uc-hero__copy {
+  display: grid;
+  gap: 12px;
+}
+
+.uc-hero__eyebrow {
+  color: #b4530a;
+  font-weight: 600;
+}
+
+.uc-hero__title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.12;
+  color: #1d1d1f;
+}
+
+.uc-hero__text {
+  margin: 0;
+  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
+  line-height: 1.6;
+  color: #48484a;
+}
+
+.uc-hero__stats {
+  display: flex;
+  gap: 12px;
+}
+
+.uc-hero__stat {
+  padding: 22px 28px;
+  border-radius: 22px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  flex: 1;
+}
+
+.uc-hero__stat strong {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  line-height: 1.2;
+}
+
+.uc-hero__stat span {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.article-grid :deep(.article-card:first-child) {
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.06), transparent 45%),
+    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.04), transparent 50%),
+    #f4f4f6;
+  color: #1d1d1f;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.article-grid :deep(.article-card:first-child::before) {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 44%, rgba(255, 209, 102, 0.04));
+}
+
+.article-grid :deep(.article-card:first-child h3) {
+  color: #1d1d1f;
+}
+
+.article-grid :deep(.article-card:first-child p) {
+  color: #48484a;
+}
+
+.article-grid :deep(.article-card:first-child .article-card__meta),
+.article-grid :deep(.article-card:first-child footer) {
+  color: #6b7280;
+}
+
+.article-grid :deep(.article-card:first-child .tag-chip) {
+  background: rgba(180, 83, 10, 0.1);
+  border-color: rgba(180, 83, 10, 0.2);
+  color: #92400e;
+}
+
+.article-grid :deep(.article-card:first-child .status-chip) {
+  background: rgba(0, 0, 0, 0.06);
+  color: #374151;
+}
+
+.article-grid :deep(.article-card:first-child .status-chip.published) {
+  background: rgba(22, 163, 74, 0.12);
+  color: #166534;
+}
+
+.article-grid :deep(.article-card:first-child .article-card__shine) {
+  background: radial-gradient(circle, rgba(255, 138, 76, 0.15), transparent 68%);
+}
+
+.article-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.article-grid :deep(.article-card) {
+  min-height: 175px;
+}
+
 .my-article-footer {
   display: flex;
   gap: 14px;
@@ -211,7 +329,7 @@ onMounted(loadMine);
 
 .reject-tip {
   margin-top: 12px;
-  color: #fecaca;
+  color: #dc2626;
   font-size: 0.92rem;
 }
 
@@ -222,29 +340,32 @@ onMounted(loadMine);
   font-size: 0.75rem;
   font-weight: 600;
   background: rgba(255, 217, 142, 0.16);
-  color: #ffd98e;
+  color: #92400e;
 }
 
 .stats-chart-box {
   margin: 0 0 20px;
-  background: rgba(255,255,255,0.03);
-  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 16px;
   padding: 16px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
+
 .stats-chart-label {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(246,241,234,0.5);
+  color: #9ca3af;
   margin-bottom: 12px;
 }
+
 .stats-canvas {
   width: 100%;
   height: 160px;
   display: block;
 }
+
 .delete-link {
-  color: #f87171;
+  color: #dc2626;
   border: none;
   background: none;
   cursor: pointer;
@@ -253,11 +374,20 @@ onMounted(loadMine);
 }
 
 .delete-link:hover {
-  color: #ef4444;
+  color: #b91c1c;
   text-decoration: underline;
 }
 
 @media (max-width: 768px) {
+  .uc-hero {
+    grid-template-columns: 1fr;
+    padding: 28px 20px;
+  }
+
+  .article-grid {
+    grid-template-columns: 1fr;
+  }
+
   .my-article-footer {
     flex-direction: column;
     gap: 10px;

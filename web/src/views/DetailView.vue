@@ -77,12 +77,54 @@
             <h3>把这篇文章分享给更多人</h3>
           </div>
         </div>
-        <div class="share-buttons">
-          <button class="ghost-btn share-btn" @click="shareTwitter">Twitter / X</button>
-          <button class="ghost-btn share-btn" @click="shareLinkedIn">LinkedIn</button>
-          <button class="ghost-btn share-btn" @click="copyLink">复制链接</button>
-        </div>
+        <button class="ghost-btn share-btn" @click="showShareCard = true">打开分享卡片</button>
       </section>
+
+      <Teleport to="body">
+        <div v-if="showShareCard" class="share-overlay" @click.self="showShareCard = false">
+          <div class="share-card-modal">
+            <button class="share-card-close" @click="showShareCard = false">&times;</button>
+
+            <div class="share-card-preview">
+              <div v-if="coverUrl" class="share-card-cover">
+                <img :src="coverUrl" :alt="article?.title" />
+              </div>
+              <div class="share-card-body">
+                <div class="share-card-meta">
+                  <span>{{ article?.author?.username || "匿名作者" }}</span>
+                  <span>{{ article?.category?.name || "未分类" }}</span>
+                </div>
+                <h3 class="share-card-title">{{ article?.title }}</h3>
+                <p class="share-card-summary">{{ article?.summary || "这篇文章还没有摘要。" }}</p>
+                <div v-if="article?.tags?.length" class="share-card-tags">
+                  <span v-for="tag in article.tags.slice(0, 3)" :key="tag.id || tag.name" class="tag-chip"># {{ tag.name }}</span>
+                </div>
+                <div class="share-card-url">
+                  <input readonly :value="shareUrl" class="field-input share-card-url-input" @click="$event.target.select()" />
+                  <button class="ghost-btn share-card-copy" @click="copyShareUrl">
+                    {{ copied ? "已复制 ✓" : "复制链接" }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="share-card-actions">
+              <button class="ghost-btn share-action-btn" @click="shareTwitter">
+                <span class="share-action-icon">𝕏</span>
+                <span>Twitter / X</span>
+              </button>
+              <button class="ghost-btn share-action-btn" @click="shareLinkedIn">
+                <span class="share-action-icon">in</span>
+                <span>LinkedIn</span>
+              </button>
+              <button class="ghost-btn share-action-btn" @click="shareWeChat">
+                <span class="share-action-icon">微信</span>
+                <span>保存图片分享</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
 
       <section class="comment-panel article-comment-panel">
         <div class="section-head">
@@ -137,8 +179,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from "vue";
-import { useHead } from "@unhead/vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { useRoute } from "vue-router";
@@ -154,22 +195,16 @@ const commentText = ref("");
 const replyTo = ref(null);
 const replyText = ref("");
 const readProgress = ref(0);
+const copied = ref(false);
+const showShareCard = ref(false);
 
-useHead({
-  title: () => article.value?.title ? `${article.value.title} — PulseBlog` : "PulseBlog",
-  meta: () => {
-    const a = article.value;
-    if (!a) return [];
-    return [
-      { property: "og:title", content: a.title },
-      { property: "og:description", content: a.summary || "" },
-      { property: "og:type", content: "article" },
-      { property: "og:url", content: window.location.href },
-      { name: "twitter:card", content: "summary_large_image" },
-    ];
-  },
-});
+const shareUrl = computed(() => window.location.href);
+
 let scrollHandler = null;
+
+watch(() => article.value?.title, (t) => {
+  document.title = t ? `${t} — PulseBlog` : "PulseBlog";
+}, { immediate: true });
 
 function updateReadProgress() {
   const scrollTop = window.scrollY;
@@ -250,21 +285,45 @@ async function submitComment() {
 }
 
 function shareTwitter() {
-  const url = encodeURIComponent(window.location.href);
+  const url = encodeURIComponent(shareUrl.value);
   const text = encodeURIComponent(article.value?.title || "");
   window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank", "noopener");
 }
 
 function shareLinkedIn() {
-  const url = encodeURIComponent(window.location.href);
+  const url = encodeURIComponent(shareUrl.value);
   window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, "_blank", "noopener");
 }
 
-async function copyLink() {
-  try {
-    await navigator.clipboard.writeText(window.location.href);
-    // brief feedback — toast would be ideal but keeping minimal
-  } catch {}
+function shareWeChat() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 480;
+  canvas.height = 320;
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = "#f4f4f6";
+  ctx.fillRect(0, 0, 480, 320);
+
+  ctx.fillStyle = "#1d1d1f";
+  ctx.font = "bold 22px sans-serif";
+  const title = article.value?.title || "";
+  const lines = title.match(/.{1,14}/g) || [title];
+  lines.slice(0, 3).forEach((line, i) => {
+    ctx.fillText(line, 32, 60 + i * 32);
+  });
+
+  ctx.fillStyle = "#6b7280";
+  ctx.font = "14px sans-serif";
+  ctx.fillText("PulseBlog · " + (article.value?.author?.username || ""), 32, 200);
+
+  ctx.fillStyle = "#92400e";
+  ctx.font = "12px monospace";
+  ctx.fillText(shareUrl.value, 32, 240);
+
+  const link = document.createElement("a");
+  link.download = "share-card.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
 }
 
 async function submitReply(parentId) {
@@ -291,6 +350,27 @@ function scrollToHeading(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+async function copyShareUrl() {
+  try {
+    await navigator.clipboard.writeText(shareUrl.value);
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = shareUrl.value;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+  }
+  copied.value = true;
+  setTimeout(() => (copied.value = false), 2000);
+}
+
+function onEsc(e) {
+  if (e.key === "Escape" && showShareCard.value) showShareCard.value = false;
+}
+
 function formatDate(value) {
   return new Date(value).toLocaleString("zh-CN");
 }
@@ -300,10 +380,12 @@ onMounted(async () => {
   await loadComments();
   scrollHandler = () => requestAnimationFrame(updateReadProgress);
   window.addEventListener("scroll", scrollHandler, { passive: true });
+  window.addEventListener("keydown", onEsc);
 });
 
 onUnmounted(() => {
   if (scrollHandler) window.removeEventListener("scroll", scrollHandler);
+  window.removeEventListener("keydown", onEsc);
 });
 </script>
 
@@ -379,13 +461,158 @@ onUnmounted(() => {
 .share-panel {
   margin-top: 48px;
 }
-.share-buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
 .share-btn {
   font-size: 13px;
+}
+
+.share-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.2s ease;
+}
+
+.share-card-modal {
+  position: relative;
+  width: min(480px, 100%);
+  background: var(--panel, #1a1e26);
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-radius: 24px;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+.share-card-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(255,255,255,0.08);
+  color: var(--text, #f7f3ea);
+  border-radius: 50%;
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition: background 0.15s;
+}
+.share-card-close:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.share-card-cover {
+  height: 180px;
+  overflow: hidden;
+}
+.share-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.share-card-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.share-card-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--text-soft, rgba(246,241,234,0.72));
+}
+
+.share-card-title {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.35;
+  color: var(--text, #f7f3ea);
+}
+
+.share-card-summary {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text-soft, rgba(246,241,234,0.72));
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.share-card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.share-card-url {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.share-card-url-input {
+  flex: 1;
+  font-size: 0.82rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.share-card-copy {
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+.share-card-actions {
+  display: flex;
+  border-top: 1px solid var(--border, rgba(255,255,255,0.1));
+}
+.share-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border-radius: 0;
+  font-size: 0.85rem;
+  border-right: 1px solid var(--border, rgba(255,255,255,0.1));
+}
+.share-action-btn:last-child {
+  border-right: none;
+}
+.share-action-btn:hover {
+  background: rgba(255,255,255,0.04);
+}
+.share-action-icon {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @media (max-width: 1080px) {
@@ -410,6 +637,16 @@ onUnmounted(() => {
   .reaction-btn {
     width: 100%;
     justify-content: center;
+  }
+  .share-card-actions {
+    flex-direction: column;
+  }
+  .share-action-btn {
+    border-right: none;
+    border-bottom: 1px solid var(--border, rgba(255,255,255,0.1));
+  }
+  .share-action-btn:last-child {
+    border-bottom: none;
   }
 }
 

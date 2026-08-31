@@ -1,5 +1,5 @@
 <template>
-  <article class="article-card article-card--localized" @click="$router.push(`/article/${item.id}`)">
+  <router-link :to="`/article/${item.id}`" class="article-card article-card--localized">
     <div v-if="coverUrl" class="article-cover" :style="{ backgroundImage: `url(${coverUrl})` }"></div>
     <div class="article-card__shine"></div>
 
@@ -19,7 +19,7 @@
       <span>{{ item.author?.username || "匿名作者" }} · {{ formatDate(item.publishedAt || item.createdAt) }}</span>
       <span class="article-card__more">阅读全文</span>
     </footer>
-  </article>
+  </router-link>
 </template>
 
 <script setup>
@@ -57,6 +57,14 @@ function formatDate(value) {
 <style scoped>
 .article-card--localized {
   isolation: isolate;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.article-card--localized:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .article-card__more {

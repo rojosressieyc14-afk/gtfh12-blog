@@ -27,6 +27,7 @@ Thumbs.db
 
 # Logs
 *.log
+*.err
 logs/
 
 # Temp files
@@ -39,13 +40,11 @@ D:*
 # Development workflow / agent internals
 workflow/
 .opencode-imperial/
+.superpowers/
 
 # Temp files with colon prefix (Windows path artifacts)
 C:*tempadmin*
 C:*login*
-
-# Agent/editor internal
-.opencode-imperial/
 
 # Uploads
 uploads/*
@@ -54,6 +53,12 @@ uploads/*
 # Binary
 server/server
 server/tmp/
+
+# Local vector DB data
+qdrant/data/
+
+# Archive (logs, backups, old docs)
+archive/
 
 # Generated JWT RSA keys
 server/keys/

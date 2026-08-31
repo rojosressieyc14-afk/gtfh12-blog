@@ -215,6 +215,108 @@ onMounted(async () => {
     rgba(255, 255, 255, 0.06);
 }
 
+.project-grid--hero .project-card--hero:nth-child(2) {
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.08), transparent 45%),
+    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.06), transparent 50%),
+    #f4f4f6;
+  color: #1d1d1f;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.project-grid--hero .project-card--hero:nth-child(2)::before {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 44%, rgba(255, 209, 102, 0.04));
+}
+
+.project-grid--hero .project-card--hero:nth-child(2) h3 {
+  color: #1d1d1f;
+}
+
+.project-grid--hero .project-card--hero:nth-child(2) .table-note {
+  color: #48484a;
+}
+
+.project-grid--hero .project-card--hero:nth-child(2) .tag-chip {
+  background: rgba(180, 83, 10, 0.1);
+  border-color: rgba(180, 83, 10, 0.2);
+  color: #92400e;
+}
+
+.project-grid--hero .project-card--hero:nth-child(2) .ghost-btn {
+  color: #374151;
+  border-color: rgba(0, 0, 0, 0.15);
+  background: transparent;
+}
+
+.project-grid--hero .project-card--hero:nth-child(2) .ghost-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.project-grid--hero .project-card--hero:nth-child(2) .solid-btn {
+  color: #1b140e;
+}
+
+.article-grid .article-card:nth-child(1),
+.article-grid .article-card:nth-child(3) {
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.06), transparent 45%),
+    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.04), transparent 50%),
+    #f4f4f6;
+  color: #1d1d1f;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.article-grid .article-card:nth-child(1)::before,
+.article-grid .article-card:nth-child(3)::before {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 44%, rgba(255, 209, 102, 0.04));
+}
+
+.article-grid :deep(.article-card:nth-child(1) h3),
+.article-grid :deep(.article-card:nth-child(3) h3) {
+  color: #1d1d1f;
+}
+
+.article-grid :deep(.article-card:nth-child(1) p),
+.article-grid :deep(.article-card:nth-child(3) p) {
+  color: #48484a;
+}
+
+.article-grid :deep(.article-card:nth-child(1) footer),
+.article-grid :deep(.article-card:nth-child(1) .article-card__meta),
+.article-grid :deep(.article-card:nth-child(3) footer),
+.article-grid :deep(.article-card:nth-child(3) .article-card__meta) {
+  color: #6b7280;
+}
+
+.article-grid :deep(.article-card:nth-child(1) .article-card__more),
+.article-grid :deep(.article-card:nth-child(3) .article-card__more) {
+  color: #b4530a;
+}
+
+.article-grid :deep(.article-card:nth-child(1) .tag-chip),
+.article-grid :deep(.article-card:nth-child(3) .tag-chip) {
+  background: rgba(180, 83, 10, 0.1);
+  border-color: rgba(180, 83, 10, 0.2);
+  color: #92400e;
+}
+
+.article-grid :deep(.article-card:nth-child(1) .status-chip),
+.article-grid :deep(.article-card:nth-child(3) .status-chip) {
+  background: rgba(0, 0, 0, 0.06);
+  color: #374151;
+}
+
+.article-grid :deep(.article-card:nth-child(1) .status-chip.published),
+.article-grid :deep(.article-card:nth-child(3) .status-chip.published) {
+  background: rgba(22, 163, 74, 0.12);
+  color: #166534;
+}
+
+.article-grid :deep(.article-card:nth-child(1) .article-card__shine),
+.article-grid :deep(.article-card:nth-child(3) .article-card__shine) {
+  background: radial-gradient(circle, rgba(255, 138, 76, 0.15), transparent 68%);
+}
+
 .home-outro {
   padding: 48px 0 8px;
   text-align: center;

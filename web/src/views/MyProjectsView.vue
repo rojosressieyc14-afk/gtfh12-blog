@@ -1,28 +1,23 @@
 <template>
-  <section class="content-section">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">作品管理</p>
-        <h3>我的项目</h3>
+  <section class="uc-projects">
+    <section class="uc-hero uc-hero--projects">
+      <div class="uc-hero__copy">
+        <p class="eyebrow uc-hero__eyebrow">作品管理</p>
+        <h2 class="uc-hero__title">我的项目</h2>
+        <p class="uc-hero__text">统一查看草稿、审核中和已发布项目，整理出真正看得懂的案例。</p>
       </div>
-      <router-link class="solid-btn" to="/project-editor">新建项目</router-link>
-    </div>
-
-    <div class="services-grid">
-      <article class="panel-card service-card">
-        <p class="eyebrow">管理</p>
-        <h4>统一查看草稿、审核中和已发布项目</h4>
-      </article>
-      <article class="panel-card service-card">
-        <p class="eyebrow">建议</p>
-        <h4>优先补齐亮点、难点和结果</h4>
-      </article>
-    </div>
+      <div class="uc-hero__stats">
+        <article class="uc-hero__stat">
+          <strong>{{ total }}</strong>
+          <span>全部项目</span>
+        </article>
+      </div>
+    </section>
 
     <p v-if="errorMessage" class="error-text" style="margin-bottom:12px">{{ errorMessage }}</p>
 
     <div v-if="projects.length" class="project-grid">
-      <article v-for="item in projects" :key="item.id" class="project-card panel-card">
+      <article v-for="item in projects" :key="item.id" class="project-card uc-project-card">
         <div class="project-card__head">
           <div>
             <h3>{{ item.title }}</h3>
@@ -42,7 +37,7 @@
         <p v-if="item.rejectReason" class="reject-tip">驳回原因：{{ item.rejectReason }}</p>
 
         <footer class="project-footer project-footer--mine">
-          <span>{{ item.isFeatured ? "首页精选项目" : "普通展示项目" }}</span>
+          <span class="project-footer__label">{{ item.isFeatured ? "首页精选项目" : "普通展示项目" }}</span>
           <div class="project-footer__actions">
             <router-link v-if="item.status === 'published'" class="inline-link" :to="`/projects/${item.id}`">
               查看详情
@@ -123,6 +118,132 @@ onMounted(loadMine);
 </script>
 
 <style scoped>
+.uc-projects {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.uc-hero {
+  border-radius: 28px;
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.18), transparent 45%),
+    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.14), transparent 50%),
+    #f4f4f6;
+  color: #1d1d1f;
+  padding: clamp(32px, 6vw, 56px) clamp(24px, 4vw, 48px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(200px, 0.6fr);
+  gap: 32px;
+  align-items: center;
+}
+
+.uc-hero__copy {
+  display: grid;
+  gap: 12px;
+}
+
+.uc-hero__eyebrow {
+  color: #b4530a;
+  font-weight: 600;
+}
+
+.uc-hero__title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.12;
+  color: #1d1d1f;
+}
+
+.uc-hero__text {
+  margin: 0;
+  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
+  line-height: 1.6;
+  color: #48484a;
+}
+
+.uc-hero__stats {
+  display: flex;
+  gap: 12px;
+}
+
+.uc-hero__stat {
+  padding: 22px 28px;
+  border-radius: 22px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  flex: 1;
+}
+
+.uc-hero__stat strong {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  line-height: 1.2;
+}
+
+.uc-hero__stat span {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.project-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.uc-project-card {
+  border-radius: 22px;
+  transition: border-color 0.2s;
+}
+
+.project-grid :deep(.project-card:first-child),
+.uc-project-card:first-child {
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.06), transparent 45%),
+    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.04), transparent 50%),
+    #f4f4f6;
+  color: #1d1d1f;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.uc-project-card:first-child::before {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 44%, rgba(255, 209, 102, 0.04));
+}
+
+.uc-project-card:first-child h3 {
+  color: #1d1d1f;
+}
+
+.uc-project-card:first-child p,
+.uc-project-card:first-child .detail-summary {
+  color: #48484a;
+}
+
+.uc-project-card:first-child .table-note,
+.uc-project-card:first-child .project-footer__label {
+  color: #6b7280;
+}
+
+.uc-project-card:first-child .tag-chip {
+  background: rgba(180, 83, 10, 0.1);
+  border-color: rgba(180, 83, 10, 0.2);
+  color: #92400e;
+}
+
+.uc-project-card:first-child .status-chip {
+  background: rgba(0, 0, 0, 0.06);
+  color: #374151;
+}
+
+.uc-project-card:first-child .status-chip.published {
+  background: rgba(22, 163, 74, 0.12);
+  color: #166534;
+}
+
 .project-status-copy {
   margin-top: 12px;
 }
@@ -135,6 +256,11 @@ onMounted(loadMine);
   flex-wrap: wrap;
 }
 
+.project-footer__label {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
 .project-footer__actions {
   display: flex;
   gap: 12px;
@@ -143,7 +269,7 @@ onMounted(loadMine);
 
 .reject-tip {
   margin-top: 12px;
-  color: #fecaca;
+  color: #dc2626;
   font-size: 0.92rem;
 }
 
@@ -154,11 +280,11 @@ onMounted(loadMine);
   font-size: 0.75rem;
   font-weight: 600;
   background: rgba(255, 217, 142, 0.16);
-  color: #ffd98e;
+  color: #92400e;
 }
 
 .delete-link {
-  color: #f87171;
+  color: #dc2626;
   border: none;
   background: none;
   cursor: pointer;
@@ -167,11 +293,20 @@ onMounted(loadMine);
 }
 
 .delete-link:hover {
-  color: #ef4444;
+  color: #b91c1c;
   text-decoration: underline;
 }
 
 @media (max-width: 768px) {
+  .uc-hero {
+    grid-template-columns: 1fr;
+    padding: 28px 20px;
+  }
+
+  .project-grid {
+    grid-template-columns: 1fr;
+  }
+
   .project-footer--mine {
     flex-direction: column;
     align-items: flex-start;

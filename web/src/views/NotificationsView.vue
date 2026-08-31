@@ -1,27 +1,17 @@
 <template>
-  <section class="content-section">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">站内信箱</p>
-        <h3>通知中心</h3>
+  <section class="uc-notifications">
+    <section class="uc-hero uc-hero--notifications">
+      <div class="uc-hero__copy">
+        <p class="eyebrow uc-hero__eyebrow">站内信箱</p>
+        <h2 class="uc-hero__title">通知中心</h2>
+        <p class="uc-hero__text">审核结果、评论互动和系统提醒都会集中显示。</p>
       </div>
-      <button class="ghost-btn" @click="markAllRead">全部标为已读</button>
-    </div>
+      <div class="uc-hero__actions">
+        <button class="ghost-btn uc-hero__ghost" @click="markAllRead">全部标为已读</button>
+      </div>
+    </section>
 
-    <div class="services-grid">
-      <article class="panel-card service-card">
-        <p class="eyebrow">范围</p>
-        <h4>审核结果、评论互动和系统提醒都会集中显示</h4>
-        <p>这里适合快速查看内容审核进度，以及文章和评论带来的后续互动。</p>
-      </article>
-      <article class="panel-card service-card">
-        <p class="eyebrow">处理</p>
-        <h4>点开通知后直接跳到对应页面</h4>
-        <p>如果通知带有操作入口，点击后会自动标记已读，并进入对应页面继续处理。</p>
-      </article>
-    </div>
-
-    <div class="filter-row">
+    <div class="uc-notifications__filters">
       <button class="ghost-btn" :class="{ active: selectedType === '' }" @click="setType('')">全部</button>
       <button class="ghost-btn" :class="{ active: selectedType === 'article_review' }" @click="setType('article_review')">文章审核</button>
       <button class="ghost-btn" :class="{ active: selectedType === 'project_review' }" @click="setType('project_review')">项目审核</button>
@@ -45,7 +35,7 @@
             <span class="status-chip" :class="notificationTypeClass(item.type)">{{ notificationTypeLabel(item.type) }}</span>
             <strong>{{ item.title }}</strong>
           </div>
-          <span>{{ formatDate(item.createdAt) }}</span>
+          <span class="notification-date">{{ formatDate(item.createdAt) }}</span>
         </div>
         <p>{{ item.content }}</p>
       </article>
@@ -149,6 +139,105 @@ onMounted(loadData);
 </script>
 
 <style scoped>
+.uc-notifications {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.uc-hero {
+  border-radius: 28px;
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.18), transparent 45%),
+    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.14), transparent 50%),
+    #f4f4f6;
+  color: #1d1d1f;
+  padding: clamp(32px, 6vw, 56px) clamp(24px, 4vw, 48px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) auto;
+  gap: 32px;
+  align-items: center;
+}
+
+.uc-hero__copy {
+  display: grid;
+  gap: 12px;
+}
+
+.uc-hero__eyebrow {
+  color: #b4530a;
+  font-weight: 600;
+}
+
+.uc-hero__title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.12;
+  color: #1d1d1f;
+}
+
+.uc-hero__text {
+  margin: 0;
+  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
+  line-height: 1.6;
+  color: #48484a;
+}
+
+.uc-hero__ghost {
+  color: #374151;
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.uc-hero__ghost:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.uc-notifications__filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.uc-notifications__filters .ghost-btn.active {
+  background: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.25);
+  color: #f97316;
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notification-card {
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.notification-card:hover {
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.notification-card.unread {
+  border-color: rgba(249, 115, 22, 0.2);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.notification-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .notification-title {
   display: flex;
   gap: 10px;
@@ -156,38 +245,49 @@ onMounted(loadData);
   flex-wrap: wrap;
 }
 
-.notification-card {
-  cursor: pointer;
+.notification-title strong {
+  color: #1d1d1f;
 }
 
-.notification-card.unread {
-  border-color: rgba(255, 209, 102, 0.22);
-  background: rgba(255, 209, 102, 0.06);
+.notification-date {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  white-space: nowrap;
 }
 
-.ghost-btn.active {
-  background: rgba(255, 209, 102, 0.12);
-  border-color: rgba(255, 209, 102, 0.28);
+.notification-card p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #48484a;
+  line-height: 1.5;
 }
 
 .status-chip.pending {
-  background: rgba(255, 166, 77, 0.18);
+  background: rgba(249, 115, 22, 0.12);
+  color: #c2410c;
 }
 
 .status-chip.success {
-  background: rgba(74, 222, 128, 0.18);
+  background: rgba(22, 163, 74, 0.12);
+  color: #166534;
 }
 
 .status-chip.reject {
-  background: rgba(248, 113, 113, 0.18);
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
 }
 
 @media (max-width: 768px) {
-  .filter-row {
+  .uc-hero {
+    grid-template-columns: 1fr;
+    padding: 28px 20px;
+  }
+
+  .uc-notifications__filters {
     flex-direction: column;
   }
 
-  .filter-row .ghost-btn {
+  .uc-notifications__filters .ghost-btn {
     width: 100%;
     justify-content: center;
   }
@@ -209,8 +309,8 @@ onMounted(loadData);
     gap: 6px;
   }
 
-  .filter-row {
-    gap: 8px;
+  .uc-notifications__filters {
+    gap: 6px;
   }
 }
 </style>

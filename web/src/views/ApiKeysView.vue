@@ -1,23 +1,20 @@
 <template>
-  <section class="content-section">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">设置</p>
-        <h3>API Key 管理</h3>
+  <section class="uc-api-keys">
+    <section class="uc-hero uc-hero--api-keys">
+      <div class="uc-hero__copy">
+        <p class="eyebrow uc-hero__eyebrow">设置</p>
+        <h2 class="uc-hero__title">API Key 管理</h2>
+        <p class="uc-hero__text">你的 API Key 经过 AES-256-GCM 加密存储，仅在你使用时解密，不会暴露。</p>
       </div>
-    </div>
+      <div class="uc-hero__actions">
+        <button class="solid-btn" @click="showAdd = true">添加 API Key</button>
+      </div>
+    </section>
 
-    <div class="services-grid">
-      <article class="panel-card service-card">
-        <p class="eyebrow">安全</p>
-        <h4>你的 API Key 经过 AES-256-GCM 加密存储，仅在你使用时解密，不会暴露</h4>
-      </article>
-    </div>
-
-    <div v-if="keys.length" class="key-list" style="margin-top:20px">
-      <article v-for="key in keys" :key="key.id" class="key-card panel-card">
+    <div v-if="keys.length" class="key-list">
+      <article v-for="key in keys" :key="key.id" class="key-card">
         <div class="key-card__head">
-          <div>
+          <div class="key-card__info">
             <span class="provider-badge">{{ key.provider }}</span>
             <code class="key-prefix">{{ key.keyPrefix }}</code>
           </div>
@@ -29,20 +26,16 @@
       </article>
     </div>
 
-    <div v-else class="empty-panel" style="margin-top:20px">
+    <div v-else class="empty-panel">
       <h4>还没有配置 API Key</h4>
       <p>添加 API Key 后可在 AI 面试中使用你自己的密钥。</p>
-    </div>
-
-    <div class="action-strip" style="margin-top:20px">
-      <button class="solid-btn" @click="showAdd = true">添加 API Key</button>
     </div>
 
     <p v-if="errorMessage" class="error-text" style="margin-top:12px">{{ errorMessage }}</p>
 
     <Teleport to="body">
       <div v-if="showAdd" class="modal-overlay" @click.self="showAdd = false">
-        <div class="modal-card panel-card">
+        <div class="modal-card">
           <h3>添加 API Key</h3>
           <div class="stack-form" style="margin-top:16px">
             <label>
@@ -136,14 +129,72 @@ onMounted(load);
 </script>
 
 <style scoped>
+.uc-api-keys {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.uc-hero {
+  border-radius: 28px;
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.18), transparent 45%),
+    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.14), transparent 50%),
+    #f4f4f6;
+  color: #1d1d1f;
+  padding: clamp(32px, 6vw, 56px) clamp(24px, 4vw, 48px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) auto;
+  gap: 32px;
+  align-items: center;
+}
+
+.uc-hero__copy {
+  display: grid;
+  gap: 12px;
+}
+
+.uc-hero__eyebrow {
+  color: #b4530a;
+  font-weight: 600;
+}
+
+.uc-hero__title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.12;
+  color: #1d1d1f;
+}
+
+.uc-hero__text {
+  margin: 0;
+  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
+  line-height: 1.6;
+  color: #48484a;
+}
+
 .key-list {
   display: grid;
   gap: 12px;
 }
+
 .key-card {
-  padding: 18px;
+  padding: 18px 20px;
   border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.5);
+  transition: border-color 0.2s;
 }
+
+.key-card:first-child {
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.06), transparent 45%),
+    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.04), transparent 50%),
+    #f4f4f6;
+  color: #1d1d1f;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
 .key-card__head {
   display: flex;
   justify-content: space-between;
@@ -151,46 +202,83 @@ onMounted(load);
   gap: 12px;
   margin-bottom: 8px;
 }
-.key-card__head div {
+
+.key-card__info {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .provider-badge {
   display: inline-block;
   padding: 3px 10px;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
-  background: rgba(255, 217, 142, 0.16);
-  color: #ffd98e;
+  background: rgba(249, 115, 22, 0.1);
+  color: #c2410c;
   text-transform: uppercase;
 }
+
 .key-prefix {
   font-family: monospace;
   font-size: 0.92rem;
-  color: var(--soft, rgba(242,239,232,0.7));
+  color: #48484a;
 }
+
 .delete-link {
-  color: #f87171;
+  color: #dc2626;
   border: none;
   background: none;
   cursor: pointer;
   padding: 0;
   font: inherit;
 }
+
+.delete-link:hover {
+  color: #b91c1c;
+  text-decoration: underline;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
 }
+
 .modal-card {
   width: min(460px, 90vw);
   padding: 28px;
   border-radius: 26px;
+  background: #fff;
+  color: #1d1d1f;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12);
+}
+
+.modal-card h3 {
+  margin: 0;
+  color: #1d1d1f;
+}
+
+@media (max-width: 768px) {
+  .uc-hero {
+    grid-template-columns: 1fr;
+    padding: 28px 20px;
+  }
+
+  .uc-hero__actions {
+    width: 100%;
+  }
+
+  .uc-hero__actions .solid-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 </style>
