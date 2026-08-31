@@ -153,13 +153,9 @@
           </label>
         </div>
 
-        <label>
+        <label class="editor-content-label">
           项目正文
-          <textarea
-            v-model="form.content"
-            class="field-area field-area--editor"
-            placeholder="# 项目背景&#10;&#10;## 目标与约束&#10;&#10;## 设计与实现&#10;&#10;## 难点拆解&#10;&#10;## 最终结果"
-          ></textarea>
+          <RichEditor v-model="form.content" placeholder="# 项目背景&#10;&#10;## 目标与约束&#10;&#10;## 设计与实现&#10;&#10;## 难点拆解&#10;&#10;## 最终结果" />
         </label>
       </div>
     </div>
@@ -216,8 +212,6 @@
         </div>
         <p>{{ checklistHint }}</p>
       </div>
-
-      <div class="markdown-body article-detail-body" v-html="compiledMarkdown"></div>
     </aside>
   </section>
 </template>
@@ -231,6 +225,7 @@ import { createProject, getMyProject, submitProject, updateProject } from "../ap
 import { uploadImage } from "../api/upload";
 import { toAssetUrl } from "../utils/asset";
 import { useUserStore } from "../stores/user";
+import RichEditor from "../components/RichEditor.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -530,6 +525,14 @@ onMounted(loadDetail);
 .case-checklist p {
   margin: 10px 0 0;
   color: #fff0d5;
+}
+
+.editor-content-label {
+  display: block;
+}
+
+.editor-content-label :deep(.rich-editor) {
+  margin-top: 8px;
 }
 
 button:disabled {

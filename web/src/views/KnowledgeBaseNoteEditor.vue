@@ -33,15 +33,10 @@
         <input v-model.trim="tagsText" class="field-input" placeholder="Vue, Go, 笔记" />
       </label>
 
-      <label>
-        内容（支持 Markdown）
-        <textarea v-model="form.content" class="field-area field-area--editor" rows="16" placeholder="使用 Markdown 编写笔记内容..."></textarea>
+      <label class="editor-content-label">
+        内容
+        <RichEditor v-model="form.content" placeholder="开始编写笔记内容..." />
       </label>
-
-      <div v-if="form.content" class="note-preview">
-        <p class="eyebrow">预览</p>
-        <div v-highlight class="markdown-body" v-html="renderedContent"></div>
-      </div>
 
       <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
 
@@ -62,6 +57,7 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { addDocument, updateDocument, listDocuments } from "../api/knowledgeBase";
 import { getMetadata } from "../api/meta";
+import RichEditor from "../components/RichEditor.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -186,6 +182,14 @@ onMounted(() => {
   border-radius: 18px;
   border: 1px solid var(--border, rgba(255,255,255,0.1));
   background: var(--panel, rgba(10,14,19,0.6));
+}
+
+.editor-content-label {
+  display: block;
+}
+
+.editor-content-label :deep(.rich-editor) {
+  margin-top: 8px;
 }
 
 </style>

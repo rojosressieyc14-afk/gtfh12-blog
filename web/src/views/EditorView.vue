@@ -114,13 +114,9 @@
             </label>
           </div>
 
-          <label>
-            Markdown 正文
-            <textarea
-              v-model="form.content"
-              class="field-area field-area--editor"
-              placeholder="# 先写结论&#10;&#10;## 背景&#10;&#10;## 方案&#10;&#10;## 过程&#10;&#10;## 总结"
-            ></textarea>
+          <label class="editor-content-label">
+            正文
+            <RichEditor v-model="form.content" placeholder="# 先写结论&#10;&#10;## 背景&#10;&#10;## 方案&#10;&#10;## 过程&#10;&#10;## 总结" />
           </label>
         </div>
       </div>
@@ -128,7 +124,7 @@
 
     <aside class="preview-card panel-card editor-preview">
       <div class="preview-head">
-        <p class="eyebrow">实时预览</p>
+        <p class="eyebrow">文章信息</p>
         <h3>{{ form.title || "这篇文章还没有标题" }}</h3>
         <p class="detail-summary">
           {{ form.summary || "写一段简洁有力的摘要，让读者在首页和详情页一眼知道这篇内容的价值。" }}
@@ -162,8 +158,6 @@
         <span class="preview-note__dot"></span>
         <p>{{ previewGuide }}</p>
       </div>
-
-      <div class="markdown-body article-detail-body" v-html="compiledMarkdown"></div>
     </aside>
   </section>
 </template>
@@ -178,6 +172,7 @@ import { getMetadata } from "../api/meta";
 import { uploadImage } from "../api/upload";
 import { useUserStore } from "../stores/user";
 import { toAssetUrl } from "../utils/asset";
+import RichEditor from "../components/RichEditor.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -213,7 +208,7 @@ const parsedTags = computed(() =>
     .filter((item, index, list) => item && list.indexOf(item) === index)
 );
 
-const compiledMarkdown = computed(() => DOMPurify.sanitize(marked.parse(form.content || "## 右侧会实时显示你的 Markdown 预览")));
+const compiledMarkdown = computed(() => DOMPurify.sanitize(marked.parse(form.content || "")));
 const submitLabel = computed(() => (userStore.isAdmin ? "直接发布" : "提交审核"));
 const submitModeLabel = computed(() => (userStore.isAdmin ? "管理员可直接发布" : "普通用户提交后进入审核"));
 const coverUrl = computed(() => toAssetUrl(form.coverImage));
@@ -639,6 +634,14 @@ onBeforeUnmount(() => {
 
 .preview-head h3 {
   font-size: 1.8rem;
+}
+
+.editor-content-label {
+  display: block;
+}
+
+.editor-content-label :deep(.rich-editor) {
+  margin-top: 8px;
 }
 
 .preview-stats {
