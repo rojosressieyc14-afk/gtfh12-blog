@@ -44,6 +44,7 @@ func Migrate(db *gorm.DB) error {
 		&model.KnowledgeBase{},
 		&model.KnowledgeDocument{},
 		&model.KbDocumentTag{},
+		&model.WikiLink{},
 		&model.UserApiKey{},
 		&model.DailyView{},
 	)

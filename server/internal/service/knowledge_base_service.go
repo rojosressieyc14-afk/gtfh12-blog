@@ -678,7 +678,7 @@ func (s *KnowledgeBaseService) SyncWikiLinks(sourceDocID uint, content string) {
 
 	titleToID := make(map[string]uint, len(docs))
 	for _, d := range docs {
-		titleToID[d.Title] = d.ID
+		titleToID[strings.ToLower(d.Title)] = d.ID
 	}
 
 	var wikiLinks []model.WikiLink
