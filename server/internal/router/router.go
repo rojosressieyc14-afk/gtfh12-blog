@@ -133,6 +133,9 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 		api.DELETE("/knowledge-bases/:id/documents/:docId", middleware.RequireAuth(), kbHandler.DeleteDocument)
 		api.POST("/knowledge-bases/:id/query", middleware.RequireAuth(), kbHandler.Query)
 		api.GET("/knowledge-bases/:id/search", middleware.RequireAuth(), kbHandler.Search)
+		api.GET("/knowledge-bases/:id/backlinks/:docId", middleware.RequireAuth(), kbHandler.Backlinks)
+		api.GET("/knowledge-bases/:id/graph", middleware.RequireAuth(), kbHandler.Graph)
+		api.GET("/knowledge-bases/:id/tags", middleware.RequireAuth(), kbHandler.ListTags)
 
 		if apiKeyHandler != nil {
 			api.GET("/user/api-keys", middleware.RequireAuth(), apiKeyHandler.List)

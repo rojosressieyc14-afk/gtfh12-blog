@@ -278,3 +278,52 @@ func (h *KnowledgeBaseHandler) Search(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"items": results})
 }
+
+func (h *KnowledgeBaseHandler) Backlinks(c *gin.Context) {
+	authUser := middleware.GetAuthUser(c)
+	kbID, _ := strconv.Atoi(c.Param("id"))
+	docID, _ := strconv.Atoi(c.Param("docId"))
+	if kbID <= 0 || docID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+		return
+	}
+
+	items, err := h.svc.GetBacklinks(uint(kbID), uint(docID), authUser.ID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"items": items})
+}
+
+func (h *KnowledgeBaseHandler) Graph(c *gin.Context) {
+	authUser := middleware.GetAuthUser(c)
+	kbID, _ := strconv.Atoi(c.Param("id"))
+	if kbID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+		return
+	}
+
+	data, err := h.svc.GetGraphData(uint(kbID), authUser.ID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"graph": data})
+}
+
+func (h *KnowledgeBaseHandler) ListTags(c *gin.Context) {
+	authUser := middleware.GetAuthUser(c)
+	kbID, _ := strconv.Atoi(c.Param("id"))
+	if kbID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+		return
+	}
+
+	tags, err := h.svc.ListAllTags(uint(kbID), authUser.ID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"items": tags})
+}

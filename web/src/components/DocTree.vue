@@ -7,8 +7,17 @@
     >
       <div
         class="doc-tree-item"
-        :class="{ 'doc-tree-item--active': activeId === item.id, 'doc-tree-item--folder': item.children?.length }"
+        :class="{
+          'doc-tree-item--active': activeId === item.id,
+          'doc-tree-item--folder': item.children?.length,
+          'doc-tree-item--dragover': dragOverId === item.id
+        }"
+        draggable="true"
         @click="$emit('select', item)"
+        @dragstart="onDragStart($event, item)"
+        @dragover.prevent="onDragOver($event, item)"
+        @dragleave="onDragLeave"
+        @drop="onDrop($event, item)"
       >
         <span class="doc-tree-icon">{{ item.children?.length ? '📁' : '📄' }}</span>
         <span class="doc-tree-title">{{ item.title || '无标题' }}</span>
@@ -18,6 +27,7 @@
           :tree="item.children"
           :active-id="activeId"
           @select="(n) => $emit('select', n)"
+          @move="(payload) => $emit('move', payload)"
         />
       </div>
     </div>
@@ -25,12 +35,41 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
+
 defineOptions({ name: 'DocTree' });
 defineProps({
   tree: { type: Array, default: () => [] },
   activeId: { type: [Number, String], default: null },
 });
-defineEmits(['select']);
+const emit = defineEmits(['select', 'move']);
+
+const dragOverId = ref(null);
+let dragData = null;
+
+function onDragStart(e, item) {
+  dragData = { id: item.id };
+  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/plain", String(item.id));
+}
+
+function onDragOver(e, item) {
+  if (dragData && dragData.id !== item.id) {
+    dragOverId.value = item.id;
+  }
+}
+
+function onDragLeave() {
+  dragOverId.value = null;
+}
+
+function onDrop(e, item) {
+  e.preventDefault();
+  dragOverId.value = null;
+  if (!dragData || dragData.id === item.id) return;
+  emit("move", { docId: dragData.id, targetId: item.id });
+  dragData = null;
+}
 </script>
 
 <style scoped>
@@ -64,6 +103,11 @@ defineEmits(['select']);
 }
 .doc-tree-item--folder {
   font-weight: 500;
+}
+.doc-tree-item--dragover {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  background: rgba(255,138,76,0.1);
 }
 .doc-tree-icon {
   font-size: 14px;

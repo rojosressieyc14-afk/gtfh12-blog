@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -167,6 +168,7 @@ func (s *KnowledgeBaseService) AddDocument(kbID, userID uint, opts AddDocumentOp
 	}
 
 	go s.tryVectorize(kbID, doc, opts.Content, opts.Title)
+	go s.SyncWikiLinks(doc.ID, opts.Content)
 
 	doc.Tags = nil
 	return &doc, nil
@@ -208,6 +210,7 @@ func (s *KnowledgeBaseService) UpdateDocument(docID, kbID, userID uint, opts Add
 	}
 
 	go s.tryVectorize(kbID, doc, opts.Content, opts.Title)
+	go s.SyncWikiLinks(doc.ID, opts.Content)
 
 	var updated model.KnowledgeDocument
 	s.db.Preload("Category").Preload("Tags").First(&updated, doc.ID)
@@ -598,4 +601,204 @@ func (s *KnowledgeBaseService) chunkText(text string) []string {
 		}
 	}
 	return chunks
+}
+
+var wikiLinkRe = regexp.MustCompile(`\[\[([^\]|]+)(?:\|([^\]]+))?\]\]`)
+
+type WikiLinkInfo struct {
+	TargetTitle string `json:"targetTitle"`
+	DisplayText string `json:"displayText"`
+}
+
+type BacklinkItem struct {
+	DocID     uint   `json:"docId"`
+	Title     string `json:"title"`
+	Snippet   string `json:"snippet"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type GraphNode struct {
+	ID    uint   `json:"id"`
+	Title string `json:"title"`
+	Links int    `json:"links"`
+}
+
+type GraphEdge struct {
+	Source uint `json:"source"`
+	Target uint `json:"target"`
+}
+
+type GraphData struct {
+	Nodes []GraphNode `json:"nodes"`
+	Edges []GraphEdge `json:"edges"`
+}
+
+func ExtractWikiLinks(content string) []WikiLinkInfo {
+	matches := wikiLinkRe.FindAllStringSubmatch(content, -1)
+	var links []WikiLinkInfo
+	seen := make(map[string]struct{})
+	for _, m := range matches {
+		target := strings.TrimSpace(m[1])
+		display := strings.TrimSpace(m[2])
+		if display == "" {
+			display = target
+		}
+		key := strings.ToLower(target)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		links = append(links, WikiLinkInfo{TargetTitle: target, DisplayText: display})
+	}
+	return links
+}
+
+func (s *KnowledgeBaseService) SyncWikiLinks(sourceDocID uint, content string) {
+	links := ExtractWikiLinks(content)
+
+	s.db.Where("source_doc_id = ?", sourceDocID).Delete(&model.WikiLink{})
+
+	if len(links) == 0 {
+		return
+	}
+
+	var kbDoc model.KnowledgeDocument
+	if err := s.db.Select("knowledge_base_id, title").First(&kbDoc, sourceDocID).Error; err != nil {
+		return
+	}
+
+	targetTitles := make([]string, len(links))
+	for i, l := range links {
+		targetTitles[i] = l.TargetTitle
+	}
+
+	var docs []model.KnowledgeDocument
+	s.db.Where("knowledge_base_id = ? AND title IN ?", kbDoc.KnowledgeBaseID, targetTitles).
+		Select("id, title").Find(&docs)
+
+	titleToID := make(map[string]uint, len(docs))
+	for _, d := range docs {
+		titleToID[d.Title] = d.ID
+	}
+
+	var wikiLinks []model.WikiLink
+	for _, l := range links {
+		targetID, found := titleToID[strings.ToLower(l.TargetTitle)]
+		if !found {
+			targetID = 0
+		}
+		wikiLinks = append(wikiLinks, model.WikiLink{
+			SourceDocID: sourceDocID,
+			TargetDocID: targetID,
+			SourceTitle: kbDoc.Title,
+			DisplayText: l.DisplayText,
+		})
+	}
+
+	s.db.Create(&wikiLinks)
+}
+
+func (s *KnowledgeBaseService) GetBacklinks(kbID, docID, userID uint) ([]BacklinkItem, error) {
+	if _, err := s.GetByID(kbID, userID); err != nil {
+		return nil, err
+	}
+
+	var links []model.WikiLink
+	s.db.Where("target_doc_id = ?", docID).Find(&links)
+
+	if len(links) == 0 {
+		return []BacklinkItem{}, nil
+	}
+
+	sourceIDs := make([]uint, len(links))
+	for i, l := range links {
+		sourceIDs[i] = l.SourceDocID
+	}
+
+	var docs []model.KnowledgeDocument
+	s.db.Where("id IN ? AND knowledge_base_id = ?", sourceIDs, kbID).Find(&docs)
+
+	docMap := make(map[uint]model.KnowledgeDocument, len(docs))
+	for _, d := range docs {
+		docMap[d.ID] = d
+	}
+
+	var items []BacklinkItem
+	for _, l := range links {
+		d, ok := docMap[l.SourceDocID]
+		if !ok {
+			continue
+		}
+		snippet := extractSnippet(d.Content, l.SourceTitle, 150)
+		items = append(items, BacklinkItem{
+			DocID:     d.ID,
+			Title:     d.Title,
+			Snippet:   snippet,
+			CreatedAt: d.CreatedAt.Format("2006-01-02 15:04"),
+		})
+	}
+	return items, nil
+}
+
+func (s *KnowledgeBaseService) GetGraphData(kbID, userID uint) (*GraphData, error) {
+	if _, err := s.GetByID(kbID, userID); err != nil {
+		return nil, err
+	}
+
+	var docs []model.KnowledgeDocument
+	s.db.Where("knowledge_base_id = ?", kbID).Select("id, title").Find(&docs)
+
+	var links []model.WikiLink
+	s.db.Joins("JOIN knowledge_documents ON knowledge_documents.id = wiki_links.source_doc_id").
+		Where("knowledge_documents.knowledge_base_id = ?", kbID).
+		Find(&links)
+
+	nodeMap := make(map[uint]*GraphNode, len(docs))
+	for _, d := range docs {
+		nodeMap[d.ID] = &GraphNode{ID: d.ID, Title: d.Title, Links: 0}
+	}
+
+	var edges []GraphEdge
+	for _, l := range links {
+		if l.TargetDocID == 0 {
+			continue
+		}
+		if _, ok := nodeMap[l.TargetDocID]; !ok {
+			continue
+		}
+		edges = append(edges, GraphEdge{Source: l.SourceDocID, Target: l.TargetDocID})
+		if n, ok := nodeMap[l.SourceDocID]; ok {
+			n.Links++
+		}
+		if n, ok := nodeMap[l.TargetDocID]; ok {
+			n.Links++
+		}
+	}
+
+	nodes := make([]GraphNode, 0, len(nodeMap))
+	for _, n := range nodeMap {
+		nodes = append(nodes, *n)
+	}
+
+	return &GraphData{Nodes: nodes, Edges: edges}, nil
+}
+
+func (s *KnowledgeBaseService) ListAllTags(kbID, userID uint) ([]string, error) {
+	if _, err := s.GetByID(kbID, userID); err != nil {
+		return nil, err
+	}
+
+	var tags []model.Tag
+	s.db.Joins("JOIN kb_document_tags ON kb_document_tags.tag_id = tags.id").
+		Joins("JOIN knowledge_documents ON knowledge_documents.id = kb_document_tags.knowledge_document_id").
+		Where("knowledge_documents.knowledge_base_id = ?", kbID).
+		Distinct("tags.name").
+		Order("tags.name").
+		Find(&tags)
+
+	names := make([]string, len(tags))
+	for i, t := range tags {
+		names[i] = t.Name
+	}
+	return names, nil
 }

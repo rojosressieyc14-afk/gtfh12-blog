@@ -40,3 +40,12 @@ type KbDocumentTag struct {
 	KnowledgeDocumentID uint `gorm:"primaryKey"`
 	TagID               uint `gorm:"primaryKey"`
 }
+
+type WikiLink struct {
+	ID           uint `gorm:"primaryKey"`
+	SourceDocID  uint `gorm:"index;not null"`
+	TargetDocID  uint `gorm:"index;not null"`
+	SourceTitle  string `gorm:"size:200"`
+	DisplayText  string `gorm:"size:200"`
+	CreatedAt    time.Time
+}

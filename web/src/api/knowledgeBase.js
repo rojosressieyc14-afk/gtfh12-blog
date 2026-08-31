@@ -18,3 +18,7 @@ export const getDocumentTree = (kbId) => client.get(`/knowledge-bases/${kbId}/tr
 export const moveDocument = (kbId, docId, payload) => client.put(`/knowledge-bases/${kbId}/documents/${docId}/move`, payload);
 
 export const getPublicNote = (id) => client.get(`/kb-notes/${id}`);
+
+export const getBacklinks = (kbId, docId) => client.get(`/knowledge-bases/${kbId}/backlinks/${docId}`);
+export const getGraphData = (kbId) => client.get(`/knowledge-bases/${kbId}/graph`);
+export const listKbTags = (kbId) => client.get(`/knowledge-bases/${kbId}/tags`);

@@ -28,10 +28,27 @@
         </label>
       </div>
 
-      <label>
-        标签（逗号分隔）
-        <input v-model.trim="tagsText" class="field-input" placeholder="Vue, Go, 笔记" />
-      </label>
+      <div class="tag-input-wrap">
+        <label>
+          标签（逗号分隔）
+          <input
+            v-model.trim="tagsText"
+            class="field-input"
+            placeholder="Vue, Go, 笔记"
+            @input="onTagInput"
+            @focus="onTagInput"
+            @blur="setTimeout(() => showTagDropdown = false, 150)"
+          />
+        </label>
+        <div v-if="showTagDropdown" class="tag-dropdown">
+          <div
+            v-for="tag in tagSuggestions"
+            :key="tag"
+            class="tag-dropdown-item"
+            @mousedown.prevent="pickTag(tag)"
+          >{{ tag }}</div>
+        </div>
+      </div>
 
       <label class="editor-content-label">
         内容
@@ -55,7 +72,7 @@ import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import { addDocument, updateDocument, listDocuments } from "../api/knowledgeBase";
+import { addDocument, updateDocument, listDocuments, listKbTags } from "../api/knowledgeBase";
 import { getMetadata } from "../api/meta";
 import RichEditor from "../components/RichEditor.vue";
 
@@ -69,6 +86,26 @@ const categories = ref([]);
 const saving = ref(false);
 const errorMessage = ref("");
 const tagsText = ref("");
+const existingTags = ref([]);
+const tagSuggestions = ref([]);
+const showTagDropdown = ref(false);
+
+function onTagInput() {
+  const parts = tagsText.value.split(/[,\n]/);
+  const current = parts[parts.length - 1]?.trim().toLowerCase() || "";
+  if (!current) { showTagDropdown.value = false; return; }
+  tagSuggestions.value = existingTags.value.filter(t =>
+    t.toLowerCase().includes(current) && !tagsText.value.toLowerCase().includes(t.toLowerCase())
+  ).slice(0, 8);
+  showTagDropdown.value = tagSuggestions.value.length > 0;
+}
+
+function pickTag(tag) {
+  const parts = tagsText.value.split(/[,\n]/);
+  parts[parts.length - 1] = tag;
+  tagsText.value = parts.join(", ") + ", ";
+  showTagDropdown.value = false;
+}
 
 const form = reactive({
   title: "",
@@ -141,6 +178,7 @@ async function handleSave() {
 onMounted(() => {
   loadCategories();
   loadExisting();
+  listKbTags(kbId).then(res => { existingTags.value = res.data.items || []; }).catch(() => {});
 });
 </script>
 
@@ -190,6 +228,34 @@ onMounted(() => {
 
 .editor-content-label :deep(.rich-editor) {
   margin-top: 8px;
+}
+
+.tag-input-wrap {
+  position: relative;
+}
+.tag-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 30;
+  background: #1a1a1a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.tag-dropdown-item {
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: rgba(246,241,234,0.7);
+  transition: background 0.12s;
+}
+.tag-dropdown-item:hover {
+  background: rgba(255,138,76,0.1);
+  color: #ff8a4c;
 }
 
 </style>
