@@ -5,6 +5,39 @@
         <h4>{{ kb?.name || '知识库' }}</h4>
         <button class="kb-sidebar-add" @click="createNewDoc">+</button>
       </div>
+      <div class="kb-search-box">
+        <div class="kb-search-input-wrap">
+          <svg class="kb-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input
+            v-model="searchKeyword"
+            type="text"
+            class="kb-search-input"
+            placeholder="搜索文档..."
+            @input="onSearchInput"
+            @keydown.escape="clearSearch"
+          />
+          <button v-if="searchKeyword" class="kb-search-clear" @click="clearSearch">×</button>
+        </div>
+        <div v-if="searchResults.length > 0" class="kb-search-results">
+          <div
+            v-for="r in searchResults"
+            :key="r.id"
+            class="kb-search-result-item"
+            @click="selectSearchResult(r)"
+          >
+            <div class="kb-search-result-title">{{ r.title || '无标题' }}</div>
+            <div class="kb-search-result-snippet" v-html="highlightSnippet(r.snippet)"></div>
+            <div class="kb-search-result-meta">
+              <span v-if="r.isPublic" class="badge badge-public">公开</span>
+              <span v-else class="badge badge-private">私密</span>
+              <span>{{ r.createdAt }}</span>
+            </div>
+          </div>
+        </div>
+        <div v-else-if="searchKeyword && !searchLoading" class="kb-search-empty">
+          没有找到匹配的文档
+        </div>
+      </div>
       <div class="kb-sidebar-tree">
         <DocTree
           :tree="docTree"
@@ -61,7 +94,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import { getKnowledgeBase, getDocumentTree, listDocuments, deleteDocument } from "../api/knowledgeBase";
+import { getKnowledgeBase, getDocumentTree, listDocuments, deleteDocument, searchDocuments } from "../api/knowledgeBase";
 import DocTree from "../components/DocTree.vue";
 import DocToc from "../components/DocToc.vue";
 
@@ -74,6 +107,48 @@ const activeHeadingId = ref(null);
 const allDocs = ref([]);
 const loading = ref(true);
 const errorMessage = ref("");
+const searchKeyword = ref("");
+const searchResults = ref([]);
+const searchLoading = ref(false);
+let searchTimer = null;
+
+function onSearchInput() {
+  clearTimeout(searchTimer);
+  if (!searchKeyword.value.trim()) {
+    searchResults.value = [];
+    return;
+  }
+  searchTimer = setTimeout(performSearch, 300);
+}
+
+async function performSearch() {
+  searchLoading.value = true;
+  try {
+    const res = await searchDocuments(route.params.id, searchKeyword.value.trim());
+    searchResults.value = res.data.items || [];
+  } catch (e) {
+    searchResults.value = [];
+  } finally {
+    searchLoading.value = false;
+  }
+}
+
+function clearSearch() {
+  searchKeyword.value = "";
+  searchResults.value = [];
+}
+
+function selectSearchResult(r) {
+  const doc = allDocs.value.find((d) => Number(d.id) === Number(r.id));
+  if (doc) currentDoc.value = doc;
+  clearSearch();
+}
+
+function highlightSnippet(snippet) {
+  if (!searchKeyword.value.trim()) return snippet;
+  const kw = searchKeyword.value.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return snippet.replace(new RegExp(`(${kw})`, "gi"), '<mark>$1</mark>');
+}
 
 function buildHeadingId(text) {
   return text.toLowerCase().replace(/[^\w\u4e00-\u9fff]+/g, "-").replace(/(^-|-$)/g, "");
@@ -252,6 +327,127 @@ onUnmounted(() => tocObserver?.disconnect());
 .kb-sidebar-btn:hover {
   color: rgba(246,241,234,0.8);
   border-color: var(--accent);
+}
+
+.kb-search-box {
+  padding: 0 12px 8px;
+  border-bottom: 1px solid var(--border, rgba(255,255,255,0.08));
+  position: relative;
+}
+.kb-search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 6px 10px;
+  transition: border-color 0.2s;
+}
+.kb-search-input-wrap:focus-within {
+  border-color: var(--accent);
+}
+.kb-search-icon {
+  width: 14px;
+  height: 14px;
+  color: rgba(246,241,234,0.35);
+  flex-shrink: 0;
+}
+.kb-search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: inherit;
+  font-size: 13px;
+  min-width: 0;
+}
+.kb-search-input::placeholder {
+  color: rgba(246,241,234,0.3);
+}
+.kb-search-clear {
+  background: none;
+  border: none;
+  color: rgba(246,241,234,0.4);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.kb-search-clear:hover {
+  color: var(--accent);
+}
+.kb-search-results {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 100%;
+  z-index: 20;
+  background: #1a1a1a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  max-height: 360px;
+  overflow-y: auto;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+}
+.kb-search-result-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.12s;
+}
+.kb-search-result-item:last-child {
+  border-bottom: none;
+}
+.kb-search-result-item:hover {
+  background: rgba(255,138,76,0.08);
+}
+.kb-search-result-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: rgba(246,241,234,0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kb-search-result-snippet {
+  font-size: 12px;
+  color: rgba(246,241,234,0.5);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kb-search-result-snippet :deep(mark) {
+  background: rgba(255,138,76,0.3);
+  color: #ffd166;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+.kb-search-result-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 11px;
+  color: rgba(246,241,234,0.35);
+}
+.kb-search-empty {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 100%;
+  z-index: 20;
+  background: #1a1a1a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(246,241,234,0.3);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
 }
 
 .kb-detail-content {

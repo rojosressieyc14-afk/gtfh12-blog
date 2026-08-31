@@ -11,10 +11,11 @@ import (
 
 type KnowledgeBaseHandler struct {
 	svc *service.KnowledgeBaseService
+	llm service.LLMProvider
 }
 
-func NewKnowledgeBaseHandler(svc *service.KnowledgeBaseService) *KnowledgeBaseHandler {
-	return &KnowledgeBaseHandler{svc: svc}
+func NewKnowledgeBaseHandler(svc *service.KnowledgeBaseService, llm service.LLMProvider) *KnowledgeBaseHandler {
+	return &KnowledgeBaseHandler{svc: svc, llm: llm}
 }
 
 func (h *KnowledgeBaseHandler) Create(c *gin.Context) {
@@ -198,7 +199,7 @@ func (h *KnowledgeBaseHandler) Query(c *gin.Context) {
 		return
 	}
 
-	result, err := h.svc.Query(uint(id), authUser.ID, payload.Question, nil)
+	result, err := h.svc.Query(uint(id), authUser.ID, payload.Question, h.llm)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -254,4 +255,26 @@ func (h *KnowledgeBaseHandler) GetPublicNote(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"item": doc})
+}
+
+func (h *KnowledgeBaseHandler) Search(c *gin.Context) {
+	authUser := middleware.GetAuthUser(c)
+	id, _ := strconv.Atoi(c.Param("id"))
+	if id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+		return
+	}
+
+	keyword := c.Query("q")
+	if keyword == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "搜索关键词不能为空"})
+		return
+	}
+
+	results, err := h.svc.SearchDocuments(uint(id), authUser.ID, keyword)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"items": results})
 }

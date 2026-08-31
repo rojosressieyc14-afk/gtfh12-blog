@@ -65,8 +65,9 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 	interviewHandler := handler.NewInterviewHandler(service.NewInterviewService(db, cfg, apiKeyService))
 
 	embeddingProvider := service.NewDeepSeekEmbedding(cfg.DeepSeekKey, cfg.DeepSeekURL)
+	llmProvider := service.NewDeepSeekLLM(cfg.DeepSeekKey, cfg.DeepSeekURL)
 	kbService := service.NewKnowledgeBaseService(db, cfg.QdrantAddr, cfg.QdrantAPIKey, embeddingProvider)
-	kbHandler := handler.NewKnowledgeBaseHandler(kbService)
+	kbHandler := handler.NewKnowledgeBaseHandler(kbService, llmProvider)
 
 	r.Static("/uploads", cfg.UploadDir)
 
@@ -131,6 +132,7 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 		api.PUT("/knowledge-bases/:id/documents/:docId/move", middleware.RequireAuth(), kbHandler.MoveDocument)
 		api.DELETE("/knowledge-bases/:id/documents/:docId", middleware.RequireAuth(), kbHandler.DeleteDocument)
 		api.POST("/knowledge-bases/:id/query", middleware.RequireAuth(), kbHandler.Query)
+		api.GET("/knowledge-bases/:id/search", middleware.RequireAuth(), kbHandler.Search)
 
 		if apiKeyHandler != nil {
 			api.GET("/user/api-keys", middleware.RequireAuth(), apiKeyHandler.List)

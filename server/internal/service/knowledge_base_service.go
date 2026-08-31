@@ -363,6 +363,79 @@ type Source struct {
 	Score   float64 `json:"score"`
 }
 
+type SearchResult struct {
+	ID        uint   `json:"id"`
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	Snippet   string `json:"snippet"`
+	IsPublic  bool   `json:"isPublic"`
+	CreatedAt string `json:"createdAt"`
+}
+
+func (s *KnowledgeBaseService) SearchDocuments(kbID, userID uint, keyword string) ([]SearchResult, error) {
+	if _, err := s.GetByID(kbID, userID); err != nil {
+		return nil, err
+	}
+
+	keyword = strings.TrimSpace(keyword)
+	if keyword == "" {
+		return nil, nil
+	}
+
+	var docs []model.KnowledgeDocument
+	likePattern := "%" + keyword + "%"
+	if err := s.db.Where("knowledge_base_id = ? AND (title LIKE ? OR content LIKE ?)", kbID, likePattern, likePattern).
+		Preload("Category").Preload("Tags").
+		Order("updated_at desc").
+		Limit(20).
+		Find(&docs).Error; err != nil {
+		return nil, err
+	}
+
+	results := make([]SearchResult, len(docs))
+	for i, doc := range docs {
+		snippet := extractSnippet(doc.Content, keyword, 120)
+		results[i] = SearchResult{
+			ID:        doc.ID,
+			Title:     doc.Title,
+			Content:   doc.Content,
+			Snippet:   snippet,
+			IsPublic:  doc.IsPublic,
+			CreatedAt: doc.CreatedAt.Format("2006-01-02 15:04"),
+		}
+	}
+	return results, nil
+}
+
+func extractSnippet(content, keyword string, maxLen int) string {
+	idx := strings.Index(strings.ToLower(content), strings.ToLower(keyword))
+	if idx == -1 {
+		if len([]rune(content)) > maxLen {
+			return string([]rune(content)[:maxLen]) + "..."
+		}
+		return content
+	}
+
+	start := idx - 40
+	if start < 0 {
+		start = 0
+	}
+	end := idx + len([]rune(keyword)) + 80
+	runes := []rune(content)
+	if end > len(runes) {
+		end = len(runes)
+	}
+
+	snippet := string(runes[start:end])
+	if start > 0 {
+		snippet = "..." + snippet
+	}
+	if end < len(runes) {
+		snippet = snippet + "..."
+	}
+	return snippet
+}
+
 type DocTreeItem struct {
 	ID        uint           `json:"id"`
 	Title     string         `json:"title"`
