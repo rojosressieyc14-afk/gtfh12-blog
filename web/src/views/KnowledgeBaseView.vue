@@ -128,8 +128,7 @@ onMounted(load);
   background:
     radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.18), transparent 45%),
     radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.14), transparent 50%),
-    #f4f4f6;
-  color: #1d1d1f;
+    var(--panel);
   padding: clamp(32px, 6vw, 56px) clamp(24px, 4vw, 48px);
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) auto;
@@ -143,7 +142,7 @@ onMounted(load);
 }
 
 .uc-hero__eyebrow {
-  color: #b4530a;
+  color: var(--accent);
   font-weight: 600;
 }
 
@@ -151,14 +150,13 @@ onMounted(load);
   margin: 0;
   font-size: clamp(1.6rem, 3vw, 2.4rem);
   line-height: 1.12;
-  color: #1d1d1f;
 }
 
 .uc-hero__text {
   margin: 0;
   font-size: clamp(0.9rem, 1.3vw, 1.05rem);
   line-height: 1.6;
-  color: #48484a;
+  color: var(--text-soft);
 }
 
 .kb-grid {
@@ -169,37 +167,37 @@ onMounted(load);
 
 .kb-card {
   padding: 22px;
-  border-radius: 22px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.5);
+  border-radius: 28px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .kb-card:hover {
-  border-color: rgba(249, 115, 22, 0.25);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  transform: translateY(-5px);
+  border-color: rgba(255, 209, 102, 0.45);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.22);
 }
 
 .kb-card:first-child {
   background:
-    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.06), transparent 45%),
-    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.04), transparent 50%),
-    #f4f4f6;
-  color: #1d1d1f;
-  border-color: rgba(0, 0, 0, 0.08);
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.14), transparent 45%),
+    radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.10), transparent 50%),
+    rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 209, 102, 0.2);
 }
 
 .kb-card:first-child h3 {
-  color: #1d1d1f;
+  color: inherit;
 }
 
 .kb-card:first-child .detail-summary {
-  color: #48484a;
+  color: var(--text-soft);
 }
 
 .kb-card:first-child .table-note {
-  color: #6b7280;
+  color: var(--text-soft);
 }
 
 .kb-card__head {
@@ -209,7 +207,6 @@ onMounted(load);
 .kb-card__head h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: #1d1d1f;
 }
 
 .kb-card__footer {
@@ -248,15 +245,14 @@ onMounted(load);
   width: min(460px, 90vw);
   padding: 28px;
   border-radius: 26px;
-  background: #fff;
-  color: #1d1d1f;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12);
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
 }
 
 .modal-card h3 {
   margin: 0;
-  color: #1d1d1f;
 }
 
 @media (max-width: 768px) {

@@ -193,8 +193,7 @@ function setupTocObserver() {
 function onSelectDoc(item) {
   const isFolder = item.children && item.children.length > 0;
   if (!isFolder) {
-    const doc = allDocs.value.find((d) => Number(d.id) === Number(item.id));
-    if (doc) currentDoc.value = doc;
+    router.push({ name: 'kb-read', params: { id: route.params.id }, query: { doc: item.id } });
   }
 }
 
@@ -208,8 +207,7 @@ function onDocContentClick(e) {
   e.preventDefault();
   const docId = Number(link.dataset.docId);
   if (!docId) return;
-  const doc = allDocs.value.find(d => Number(d.id) === docId);
-  if (doc) currentDoc.value = doc;
+  router.push({ name: 'kb-read', params: { id: route.params.id }, query: { doc: docId } });
 }
 
 function onSearchInput() {
@@ -229,8 +227,7 @@ async function performSearch() {
 function clearSearch() { searchKeyword.value = ""; searchResults.value = []; }
 
 function selectSearchResult(r) {
-  const doc = allDocs.value.find((d) => Number(d.id) === Number(r.id));
-  if (doc) currentDoc.value = doc;
+  router.push({ name: 'kb-read', params: { id: route.params.id }, query: { doc: r.id } });
   clearSearch();
 }
 

@@ -130,8 +130,7 @@ onMounted(loadData);
   background:
     radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.18), transparent 45%),
     radial-gradient(100% 100% at 0% 100%, rgba(255, 209, 102, 0.14), transparent 50%),
-    #f4f4f6;
-  color: #1d1d1f;
+    var(--panel);
   padding: clamp(32px, 6vw, 56px) clamp(24px, 4vw, 48px);
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) auto;
@@ -145,7 +144,7 @@ onMounted(loadData);
 }
 
 .kb-public-hero__eyebrow {
-  color: #b4530a;
+  color: var(--accent);
   font-weight: 600;
 }
 
@@ -153,14 +152,13 @@ onMounted(loadData);
   margin: 0;
   font-size: clamp(1.6rem, 3vw, 2.4rem);
   line-height: 1.12;
-  color: #1d1d1f;
 }
 
 .kb-public-hero__text {
   margin: 0;
   font-size: clamp(0.9rem, 1.3vw, 1.05rem);
   line-height: 1.6;
-  color: #48484a;
+  color: var(--text-soft);
 }
 
 .kb-public-hero__stats {
@@ -174,19 +172,19 @@ onMounted(loadData);
   align-items: center;
   padding: 16px 24px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
 }
 
 .kb-public-hero__stat strong {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #b4530a;
+  color: var(--accent);
 }
 
 .kb-public-hero__stat span {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--text-soft);
   margin-top: 4px;
 }
 
@@ -198,23 +196,24 @@ onMounted(loadData);
 
 .kb-public-card {
   padding: 22px;
-  border-radius: 22px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.5);
+  border-radius: 28px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .kb-public-card:hover {
-  border-color: rgba(249, 115, 22, 0.25);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  transform: translateY(-5px);
+  border-color: rgba(255, 209, 102, 0.45);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.22);
 }
 
 .kb-public-card--mine {
   background:
-    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.06), transparent 45%),
-    rgba(255, 255, 255, 0.5);
-  border-color: rgba(249, 115, 22, 0.15);
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.14), transparent 45%),
+    rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 209, 102, 0.2);
 }
 
 .kb-public-card__head {
@@ -227,7 +226,6 @@ onMounted(loadData);
 .kb-public-card__head h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: #1d1d1f;
 }
 
 .kb-public-card__footer {
@@ -238,18 +236,17 @@ onMounted(loadData);
 }
 
 .kb-public-card__footer .ghost-btn {
-  border-color: rgba(0, 0, 0, 0.12);
-  color: #b4530a;
+  color: var(--accent);
 }
 
 .kb-public-card__footer .ghost-btn:hover {
-  background: rgba(255, 138, 76, 0.08);
-  border-color: #b4530a;
+  background: rgba(255, 138, 76, 0.12);
+  border-color: var(--accent);
 }
 
 .tag-chip--accent {
-  background: rgba(255, 138, 76, 0.12);
-  color: #b4530a;
+  background: rgba(255, 138, 76, 0.15);
+  color: var(--accent);
 }
 
 .empty-panel {
@@ -259,12 +256,11 @@ onMounted(loadData);
 
 .empty-panel h4 {
   margin: 0 0 8px;
-  color: #6b7280;
 }
 
 .empty-panel p {
   margin: 0;
-  color: #9ca3af;
+  color: var(--text-soft);
   font-size: 0.9rem;
 }
 

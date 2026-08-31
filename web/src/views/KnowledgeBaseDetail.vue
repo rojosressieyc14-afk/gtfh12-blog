@@ -70,6 +70,7 @@
         <h1 class="kb-doc-title">{{ currentDoc.title || '无标题' }}</h1>
         <div v-highlight class="markdown-body" v-html="renderedContent"></div>
         <div class="kb-doc-actions">
+          <router-link class="ghost-btn" :to="{ name: 'kb-read', params: { id: $route.params.id }, query: { doc: currentDoc.id } }">阅读</router-link>
           <router-link class="ghost-btn" :to="`/user-center/knowledge-base/${$route.params.id}/editor/${currentDoc.id}`">编辑</router-link>
           <button class="ghost-btn" @click="handleDeleteDoc(currentDoc)">删除</button>
           <button class="ghost-btn" @click="$router.push({ name: 'uc-kb-graph', params: { id: $route.params.id } })">图谱</button>

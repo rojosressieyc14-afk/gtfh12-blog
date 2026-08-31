@@ -23,6 +23,7 @@ import KbNoteView from "../views/KbNoteView.vue";
 import PublicKnowledgeBases from "../views/PublicKnowledgeBases.vue";
 import PublicKBDetailView from "../views/PublicKBDetailView.vue";
 import KBGraphView from "../views/KBGraphView.vue";
+import KBReadView from "../views/KBReadView.vue";
 import ApiKeysView from "../views/ApiKeysView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import UserCenterLayout from "../components/UserCenterLayout.vue";
@@ -40,6 +41,7 @@ const routes = [
   { path: "/interview", name: "interview", component: InterviewView, meta: { title: "AI 面试官", ...authGuard } },
   { path: "/knowledge-bases", name: "knowledge-bases", component: PublicKnowledgeBases, meta: { title: "知识库" } },
   { path: "/knowledge-bases/:id", name: "knowledge-bases-detail", component: PublicKBDetailView, meta: { title: "知识库详情" } },
+  { path: "/knowledge-bases/:id/read", name: "kb-read", component: KBReadView, meta: { title: "阅读文档", sidebar: false } },
   { path: "/author/:id", name: "author", component: AuthorView, meta: { title: "作者主页" } },
 
   {
