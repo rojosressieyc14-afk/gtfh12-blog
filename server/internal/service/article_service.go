@@ -539,7 +539,7 @@ func (s *ArticleService) baseArticleQuery() *gorm.DB {
 
 func (s *ArticleService) syncTags(article *model.Article, names []string) error {
 	unique := make(map[string]struct{})
-	tags := make([]model.Tag, 0)
+	uniqueNames := make([]string, 0)
 
 	for _, raw := range names {
 		name := strings.TrimSpace(raw)
@@ -550,18 +550,38 @@ func (s *ArticleService) syncTags(article *model.Article, names []string) error 
 			continue
 		}
 		unique[name] = struct{}{}
+		uniqueNames = append(uniqueNames, name)
+	}
 
-		var tag model.Tag
-		err := s.db.Where("name = ?", name).First(&tag).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			tag = model.Tag{Name: name}
-			if err := s.db.Create(&tag).Error; err != nil {
-				return err
-			}
-		} else if err != nil {
+	if len(uniqueNames) == 0 {
+		return s.db.Model(article).Association("Tags").Replace([]model.Tag{})
+	}
+
+	var existingTags []model.Tag
+	if err := s.db.Where("name IN ?", uniqueNames).Find(&existingTags).Error; err != nil {
+		return err
+	}
+
+	existingMap := make(map[string]model.Tag, len(existingTags))
+	for _, t := range existingTags {
+		existingMap[t.Name] = t
+	}
+
+	var tags []model.Tag
+	var toCreate []model.Tag
+	for _, name := range uniqueNames {
+		if t, ok := existingMap[name]; ok {
+			tags = append(tags, t)
+		} else {
+			toCreate = append(toCreate, model.Tag{Name: name})
+		}
+	}
+
+	if len(toCreate) > 0 {
+		if err := s.db.Create(&toCreate).Error; err != nil {
 			return err
 		}
-		tags = append(tags, tag)
+		tags = append(tags, toCreate...)
 	}
 
 	return s.db.Model(article).Association("Tags").Replace(tags)

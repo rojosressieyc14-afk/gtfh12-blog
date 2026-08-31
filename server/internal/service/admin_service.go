@@ -162,62 +162,54 @@ func (s *AdminService) Dashboard() (*DashboardPayload, error) {
 
 func (s *AdminService) dashboardStats() (map[string]int64, error) {
 	result := map[string]int64{}
-	statuses := []string{
-		model.ArticleDraft,
-		model.ArticlePending,
-		model.ArticlePublished,
-		model.ArticleRejected,
+
+	type statusCount struct {
+		Status string
+		Count  int64
 	}
 
-	for _, status := range statuses {
-		var count int64
-		if err := s.db.Model(&model.Article{}).Where("status = ?", status).Count(&count).Error; err != nil {
-			return nil, err
-		}
-		result[status] = count
-	}
-
-	var users int64
-	if err := s.db.Model(&model.User{}).Count(&users).Error; err != nil {
+	var articleCounts []statusCount
+	if err := s.db.Model(&model.Article{}).
+		Select("status, COUNT(*) as count").
+		Group("status").
+		Scan(&articleCounts).Error; err != nil {
 		return nil, err
 	}
-	result["users"] = users
+	for _, c := range articleCounts {
+		result[c.Status] = c.Count
+	}
 
-	var comments int64
-	if err := s.db.Model(&model.Comment{}).Count(&comments).Error; err != nil {
+	var projectCounts []statusCount
+	if err := s.db.Model(&model.Project{}).
+		Select("status, COUNT(*) as count").
+		Group("status").
+		Scan(&projectCounts).Error; err != nil {
 		return nil, err
 	}
-	result["comments"] = comments
+	for _, c := range projectCounts {
+		result["project_"+c.Status] = c.Count
+	}
 
-	var categories int64
-	if err := s.db.Model(&model.Category{}).Count(&categories).Error; err != nil {
+	type tableCount struct {
+		Name  string
+		Count int64
+	}
+
+	var entityCounts []tableCount
+	if err := s.db.Raw(`
+		SELECT 'users' as name, COUNT(*) as count FROM users
+		UNION ALL
+		SELECT 'comments', COUNT(*) FROM comments
+		UNION ALL
+		SELECT 'categories', COUNT(*) FROM categories
+		UNION ALL
+		SELECT 'tags', COUNT(*) FROM tags
+	`).Scan(&entityCounts).Error; err != nil {
 		return nil, err
 	}
-	result["categories"] = categories
-
-	var tags int64
-	if err := s.db.Model(&model.Tag{}).Count(&tags).Error; err != nil {
-		return nil, err
+	for _, c := range entityCounts {
+		result[c.Name] = c.Count
 	}
-	result["tags"] = tags
-
-	var projects int64
-	if err := s.db.Model(&model.Project{}).Where("status = ?", model.ProjectPublished).Count(&projects).Error; err != nil {
-		return nil, err
-	}
-	result["projects"] = projects
-
-	var pendingProjects int64
-	if err := s.db.Model(&model.Project{}).Where("status = ?", model.ProjectPending).Count(&pendingProjects).Error; err != nil {
-		return nil, err
-	}
-	result["pendingProjects"] = pendingProjects
-
-	var draftProjects int64
-	if err := s.db.Model(&model.Project{}).Where("status = ?", model.ProjectDraft).Count(&draftProjects).Error; err != nil {
-		return nil, err
-	}
-	result["draftProjects"] = draftProjects
 
 	var moderationHits int64
 	if err := s.db.Model(&model.ModerationHit{}).Count(&moderationHits).Error; err != nil {
@@ -238,6 +230,10 @@ func (s *AdminService) dashboardStats() (map[string]int64, error) {
 		return nil, err
 	}
 	result["sensitiveWords"] = sensitiveWords
+
+	result["projects"] = result["project_"+model.ProjectPublished]
+	result["pendingProjects"] = result["project_"+model.ProjectPending]
+	result["draftProjects"] = result["project_"+model.ProjectDraft]
 
 	return result, nil
 }

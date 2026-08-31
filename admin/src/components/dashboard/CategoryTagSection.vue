@@ -137,8 +137,21 @@ const tagSaving = ref({});
 const tagDeleting = ref({});
 
 function syncDrafts() {
-  categoryDrafts.value = Object.fromEntries(props.categories.map((item) => [item.id, item.name || ""]));
-  tagDrafts.value = Object.fromEntries(props.tags.map((item) => [item.id, item.name || ""]));
+  const newCategoryDrafts = {};
+  for (const item of props.categories) {
+    newCategoryDrafts[item.id] = categoryDrafts.value[item.id] !== undefined
+      ? categoryDrafts.value[item.id]
+      : (item.name || "");
+  }
+  categoryDrafts.value = newCategoryDrafts;
+
+  const newTagDrafts = {};
+  for (const item of props.tags) {
+    newTagDrafts[item.id] = tagDrafts.value[item.id] !== undefined
+      ? tagDrafts.value[item.id]
+      : (item.name || "");
+  }
+  tagDrafts.value = newTagDrafts;
 }
 
 watch(() => [props.categories, props.tags], syncDrafts, { immediate: true });

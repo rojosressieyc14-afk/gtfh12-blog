@@ -13,17 +13,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from "vue";
+import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { useAdminStore } from "./stores/auth";
 
 const store = useAdminStore();
 const route = useRoute();
 const showQuickNav = computed(() => route.name !== "login" && store.isLoggedIn);
-
-onMounted(() => {
-  store.fetchProfile();
-});
 </script>
 
 <style scoped>

@@ -240,18 +240,51 @@ func (s *KnowledgeBaseService) GetPublicNote(noteID uint) (*model.KnowledgeDocum
 }
 
 func (s *KnowledgeBaseService) ensureTags(tx *gorm.DB, names []string) ([]model.Tag, error) {
-	var tags []model.Tag
-	for _, name := range names {
-		name = strings.TrimSpace(name)
+	uniqueNames := make([]string, 0)
+	seen := make(map[string]struct{})
+	for _, raw := range names {
+		name := strings.TrimSpace(raw)
 		if name == "" {
 			continue
 		}
-		var tag model.Tag
-		if err := tx.Where("name = ?", name).FirstOrCreate(&tag, model.Tag{Name: name}).Error; err != nil {
+		if _, ok := seen[name]; ok {
+			continue
+		}
+		seen[name] = struct{}{}
+		uniqueNames = append(uniqueNames, name)
+	}
+
+	if len(uniqueNames) == 0 {
+		return nil, nil
+	}
+
+	var existingTags []model.Tag
+	if err := tx.Where("name IN ?", uniqueNames).Find(&existingTags).Error; err != nil {
+		return nil, err
+	}
+
+	existingMap := make(map[string]model.Tag, len(existingTags))
+	for _, t := range existingTags {
+		existingMap[t.Name] = t
+	}
+
+	var tags []model.Tag
+	var toCreate []model.Tag
+	for _, name := range uniqueNames {
+		if t, ok := existingMap[name]; ok {
+			tags = append(tags, t)
+		} else {
+			toCreate = append(toCreate, model.Tag{Name: name})
+		}
+	}
+
+	if len(toCreate) > 0 {
+		if err := tx.Create(&toCreate).Error; err != nil {
 			return nil, err
 		}
-		tags = append(tags, tag)
+		tags = append(tags, toCreate...)
 	}
+
 	return tags, nil
 }
 
