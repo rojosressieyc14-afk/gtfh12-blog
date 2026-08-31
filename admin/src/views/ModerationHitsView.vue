@@ -153,7 +153,11 @@ async function saveSettings() {
 
 async function changePage(nextPage) {
   page.value = nextPage;
-  await loadHits();
+  try {
+    await loadHits();
+  } catch (error) {
+    say(error?.response?.data?.message || error?.message || "加载风控命中记录失败。");
+  }
 }
 
 function formatDate(value) {

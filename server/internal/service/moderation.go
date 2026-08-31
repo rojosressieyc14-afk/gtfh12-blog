@@ -49,6 +49,29 @@ type moderationService struct {
 	builtinWords []string
 	customWords  []string
 	words        []string
+	trie         *moderationTrie
+}
+
+type moderationTrie struct {
+	children map[rune]*moderationTrie
+	isEnd    bool
+	word     string
+}
+
+func newTrie() *moderationTrie {
+	return &moderationTrie{children: make(map[rune]*moderationTrie)}
+}
+
+func (t *moderationTrie) insert(word string) {
+	node := t
+	for _, r := range word {
+		if _, ok := node.children[r]; !ok {
+			node.children[r] = newTrie()
+		}
+		node = node.children[r]
+	}
+	node.isEnd = true
+	node.word = word
 }
 
 var sensitiveChecker = newModerationService()
@@ -87,9 +110,15 @@ func newModerationService() *moderationService {
 		return len(words[i]) > len(words[j])
 	})
 
+	trie := newTrie()
+	for _, word := range words {
+		trie.insert(word)
+	}
+
 	return &moderationService{
 		builtinWords: words,
 		words:        append([]string(nil), words...),
+		trie:         trie,
 	}
 }
 
@@ -145,7 +174,7 @@ func normalizeModerationRune(r rune) rune {
 
 func (m *moderationService) findSensitiveWord(text string) string {
 	m.mu.RLock()
-	words := m.words
+	trie := m.trie
 	m.mu.RUnlock()
 
 	normalized := normalizeModerationText(text)
@@ -153,16 +182,24 @@ func (m *moderationService) findSensitiveWord(text string) string {
 		return ""
 	}
 
-	for _, word := range words {
-		count := strings.Count(normalized, word)
-		if count == 0 {
-			continue
-		}
-		if count > 1 {
-			return word
-		}
-		if isStandaloneWord(normalized, word) {
-			return word
+	tr := []rune(normalized)
+	for i := 0; i < len(tr); i++ {
+		node := trie
+		for j := i; j < len(tr); j++ {
+			child, ok := node.children[tr[j]]
+			if !ok {
+				break
+			}
+			node = child
+			if node.isEnd {
+				wordRunes := []rune(node.word)
+				wordLen := len(wordRunes)
+				beforeOK := i == 0 || !isWordRune(tr[i-1])
+				afterOK := i+wordLen >= len(tr) || !isWordRune(tr[i+wordLen])
+				if beforeOK && afterOK {
+					return node.word
+				}
+			}
 		}
 	}
 	return ""
@@ -237,9 +274,15 @@ func (m *moderationService) setCustomWords(words []string) {
 		return len(merged[i]) > len(merged[j])
 	})
 
+	trie := newTrie()
+	for _, word := range merged {
+		trie.insert(word)
+	}
+
 	m.mu.Lock()
 	m.customWords = customWords
 	m.words = merged
+	m.trie = trie
 	m.mu.Unlock()
 }
 

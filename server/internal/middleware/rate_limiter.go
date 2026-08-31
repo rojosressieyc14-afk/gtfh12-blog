@@ -18,6 +18,8 @@ type RateLimiter struct {
 	entries map[string]*rateEntry
 	limit   int
 	window  time.Duration
+	ticker  *time.Ticker
+	stop    chan struct{}
 }
 
 func NewRateLimiter(limit int, window time.Duration) *RateLimiter {
@@ -25,22 +27,33 @@ func NewRateLimiter(limit int, window time.Duration) *RateLimiter {
 		entries: make(map[string]*rateEntry),
 		limit:   limit,
 		window:  window,
+		ticker:  time.NewTicker(window),
+		stop:    make(chan struct{}),
 	}
 	go rl.cleanup()
 	return rl
 }
 
+func (rl *RateLimiter) Stop() {
+	close(rl.stop)
+	rl.ticker.Stop()
+}
+
 func (rl *RateLimiter) cleanup() {
-	ticker := time.NewTicker(rl.window)
-	for range ticker.C {
-		rl.mu.Lock()
-		now := time.Now()
-		for key, entry := range rl.entries {
-			if now.After(entry.resetAt) {
-				delete(rl.entries, key)
+	for {
+		select {
+		case <-rl.ticker.C:
+			rl.mu.Lock()
+			now := time.Now()
+			for key, entry := range rl.entries {
+				if now.After(entry.resetAt) {
+					delete(rl.entries, key)
+				}
 			}
+			rl.mu.Unlock()
+		case <-rl.stop:
+			return
 		}
-		rl.mu.Unlock()
 	}
 }
 

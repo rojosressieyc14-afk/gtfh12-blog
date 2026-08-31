@@ -779,7 +779,7 @@ func normalizePagination(page, pageSize int) Pagination {
 		page = 1
 	}
 	if pageSize <= 0 {
-		pageSize = 9
+		pageSize = 10
 	}
 	if pageSize > 30 {
 		pageSize = 30

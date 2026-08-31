@@ -106,7 +106,11 @@ async function loadLogs() {
 
 async function changePage(nextPage) {
   page.value = nextPage;
-  await loadLogs();
+  try {
+    await loadLogs();
+  } catch (error) {
+    say(error?.response?.data?.message || error?.message || "加载日志失败。");
+  }
 }
 
 function actionLabel(value) {

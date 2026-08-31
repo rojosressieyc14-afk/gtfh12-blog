@@ -130,7 +130,11 @@ async function loadWords() {
 
 async function changePage(nextPage) {
   page.value = nextPage;
-  await loadWords();
+  try {
+    await loadWords();
+  } catch (error) {
+    say(error?.response?.data?.message || error?.message || "加载敏感词列表失败。");
+  }
 }
 
 function resetForm() {
