@@ -10,7 +10,7 @@
       </div>
       <div class="kb-public-hero__stats">
         <article class="kb-public-hero__stat">
-          <strong>{{ kbs.length }}</strong>
+          <strong>{{ publicKbs.length }}</strong>
           <span>公开知识库</span>
         </article>
         <article class="kb-public-hero__stat">
@@ -20,24 +20,50 @@
       </div>
     </section>
 
+    <section v-if="myKbs.length" class="content-section content-section--compact">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">我的知识库</p>
+        </div>
+        <router-link class="ghost-btn" to="/user-center/knowledge-base">管理知识库</router-link>
+      </div>
+      <div class="kb-public-grid">
+        <article
+          v-for="kb in myKbs"
+          :key="`my-${kb.id}`"
+          class="kb-public-card kb-public-card--mine"
+          @click="$router.push({ name: 'uc-knowledge-base-detail', params: { id: kb.id } })"
+        >
+          <div class="kb-public-card__head">
+            <div>
+              <h3>{{ kb.name }}</h3>
+              <p class="table-note">{{ kb.docCount }} 篇文档 · {{ formatDate(kb.updatedAt) }}</p>
+            </div>
+            <span class="tag-chip tag-chip--accent">我的</span>
+          </div>
+          <p v-if="kb.description" class="detail-summary">{{ kb.description }}</p>
+        </article>
+      </div>
+    </section>
+
     <section class="content-section content-section--compact">
       <div class="section-head">
         <div>
-          <p class="eyebrow">知识库列表</p>
+          <p class="eyebrow">公开知识库</p>
         </div>
       </div>
 
       <div v-if="loading" class="empty-panel">
         <h4>加载中...</h4>
       </div>
-      <div v-else-if="!kbs.length" class="empty-panel">
+      <div v-else-if="!publicKbs.length" class="empty-panel">
         <h4>暂无公开知识库</h4>
-        <p>作者还没有公开任何知识库文档。</p>
+        <p>还没有公开的知识库文档。</p>
       </div>
       <div v-else class="kb-public-grid">
         <article
-          v-for="kb in kbs"
-          :key="kb.id"
+          v-for="kb in publicKbs"
+          :key="`pub-${kb.id}`"
           class="kb-public-card"
           @click="$router.push(`/knowledge-bases/${kb.id}`)"
         >
@@ -61,12 +87,15 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import { listPublicKBs } from "../api/knowledgeBase";
+import { useUserStore } from "../stores/user";
+import { listPublicKBs, listKnowledgeBases } from "../api/knowledgeBase";
 
-const kbs = ref([]);
+const userStore = useUserStore();
+const myKbs = ref([]);
+const publicKbs = ref([]);
 const loading = ref(true);
 
-const totalDocs = computed(() => kbs.value.reduce((sum, kb) => sum + (kb.publicCount || 0), 0));
+const totalDocs = computed(() => publicKbs.value.reduce((sum, kb) => sum + (kb.publicCount || 0), 0));
 
 function formatDate(value) {
   return new Date(value).toLocaleDateString("zh-CN");
@@ -74,10 +103,18 @@ function formatDate(value) {
 
 onMounted(async () => {
   try {
-    const { data } = await listPublicKBs();
-    kbs.value = data.items || [];
+    const tasks = [listPublicKBs()];
+    if (userStore.isLoggedIn) {
+      tasks.push(listKnowledgeBases());
+    }
+    const results = await Promise.all(tasks);
+    publicKbs.value = results[0].data.items || [];
+    if (userStore.isLoggedIn && results[1]) {
+      myKbs.value = results[1].data.items || [];
+    }
   } catch {
-    kbs.value = [];
+    publicKbs.value = [];
+    myKbs.value = [];
   } finally {
     loading.value = false;
   }
@@ -176,6 +213,13 @@ onMounted(async () => {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
 }
 
+.kb-public-card--mine {
+  background:
+    radial-gradient(120% 120% at 80% 0%, rgba(255, 138, 76, 0.06), transparent 45%),
+    rgba(255, 255, 255, 0.5);
+  border-color: rgba(249, 115, 22, 0.15);
+}
+
 .kb-public-card__head {
   display: flex;
   justify-content: space-between;
@@ -204,6 +248,11 @@ onMounted(async () => {
 .kb-public-card__footer .ghost-btn:hover {
   background: rgba(255, 138, 76, 0.08);
   border-color: #b4530a;
+}
+
+.tag-chip--accent {
+  background: rgba(255, 138, 76, 0.12);
+  color: #b4530a;
 }
 
 .empty-panel {

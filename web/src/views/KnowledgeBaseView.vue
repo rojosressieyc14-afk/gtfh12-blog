@@ -12,7 +12,7 @@
     </section>
 
     <div v-if="kbs.length" class="kb-grid">
-      <article v-for="kb in kbs" :key="kb.id" class="kb-card" @click="$router.push(`/knowledge-base/${kb.id}`)">
+      <article v-for="kb in kbs" :key="kb.id" class="kb-card" @click="$router.push({ name: 'uc-knowledge-base-detail', params: { id: kb.id } })">
         <div class="kb-card__head">
           <div>
             <h3>{{ kb.name }}</h3>
