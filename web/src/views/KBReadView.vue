@@ -62,7 +62,7 @@ import { useRoute, useRouter } from "vue-router";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { useUserStore } from "../stores/user";
-import { getKnowledgeBase, getDocumentTree, listPublicDocuments } from "../api/knowledgeBase";
+import { getKnowledgeBase, getDocumentTree, listDocuments, listPublicDocuments } from "../api/knowledgeBase";
 import DocTree from "../components/DocTree.vue";
 import DocToc from "../components/DocToc.vue";
 
@@ -153,9 +153,10 @@ async function load() {
   loading.value = true;
   errorMessage.value = "";
   try {
+    const docApi = userStore.isLoggedIn ? listDocuments : listPublicDocuments;
     const [kbRes, docRes, treeRes] = await Promise.all([
       getKnowledgeBase(route.params.id),
-      listPublicDocuments(route.params.id).catch(() => ({ data: { items: [] } })),
+      docApi(route.params.id).catch(() => ({ data: { items: [] } })),
       getDocumentTree(route.params.id).catch(() => ({ data: { tree: [] } })),
     ]);
     kb.value = kbRes.data.item;
