@@ -4,8 +4,7 @@
       <p class="login-tag">PulseBlog Admin</p>
       <h1>独立后台管理入口</h1>
       <p class="login-text">
-        在这里统一处理文章审核、作品管理、评论维护、素材清理和运营日志。当前默认管理员账号为
-        <code>admin</code>，密码为 <code>admin123</code>。
+        在这里统一处理文章审核、作品管理、评论维护、素材清理和运营日志。请使用管理员账号登录。
       </p>
 
       <form class="login-form" @submit.prevent="submit">
@@ -34,8 +33,8 @@ const router = useRouter();
 const store = useAdminStore();
 const errorMessage = ref("");
 const form = reactive({
-  username: "admin",
-  password: "admin123"
+  username: "",
+  password: ""
 });
 
 async function submit() {

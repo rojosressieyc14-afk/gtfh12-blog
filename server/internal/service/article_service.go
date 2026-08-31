@@ -267,9 +267,7 @@ func (s *ArticleService) ListPublished(filter PublishedArticleFilter) ([]model.A
 		Limit(pagination.PageSize).
 		Find(&articles).Error
 	if err == nil {
-		for index := range articles {
-			s.fillReactionSummary(&articles[index], 0)
-		}
+		s.fillReactionSummaryBatch(&articles, 0)
 	}
 	pagination.Total = total
 	return articles, pagination, err
@@ -302,9 +300,7 @@ func (s *ArticleService) ListTrending(limit int) ([]model.Article, error) {
 		return nil, err
 	}
 
-	for index := range articles {
-		s.fillReactionSummary(&articles[index], 0)
-	}
+	s.fillReactionSummaryBatch(&articles, 0)
 
 	for i := 0; i < len(articles); i++ {
 		for j := i + 1; j < len(articles); j++ {
@@ -329,9 +325,7 @@ func (s *ArticleService) ListMine(userID uint, page, pageSize int) ([]model.Arti
 	}
 	err := query.Offset((pagination.Page - 1) * pagination.PageSize).Limit(pagination.PageSize).Find(&articles).Error
 	if err == nil {
-		for index := range articles {
-			s.fillReactionSummary(&articles[index], userID)
-		}
+		s.fillReactionSummaryBatch(&articles, userID)
 	}
 	pagination.Total = total
 	return articles, pagination, err
@@ -345,9 +339,7 @@ func (s *ArticleService) ListLiked(userID uint) ([]model.Article, error) {
 		Order("article_likes.created_at desc").
 		Find(&articles).Error
 	if err == nil {
-		for index := range articles {
-			s.fillReactionSummary(&articles[index], userID)
-		}
+		s.fillReactionSummaryBatch(&articles, userID)
 	}
 	return articles, err
 }
@@ -360,9 +352,7 @@ func (s *ArticleService) ListFavorited(userID uint) ([]model.Article, error) {
 		Order("article_favorites.created_at desc").
 		Find(&articles).Error
 	if err == nil {
-		for index := range articles {
-			s.fillReactionSummary(&articles[index], userID)
-		}
+		s.fillReactionSummaryBatch(&articles, userID)
 	}
 	return articles, err
 }
@@ -371,9 +361,7 @@ func (s *ArticleService) ListPending() ([]model.Article, error) {
 	var articles []model.Article
 	err := s.baseArticleQuery().Where("status = ?", model.ArticlePending).Order("updated_at asc").Find(&articles).Error
 	if err == nil {
-		for index := range articles {
-			s.fillReactionSummary(&articles[index], 0)
-		}
+		s.fillReactionSummaryBatch(&articles, 0)
 	}
 	return articles, err
 }
@@ -692,6 +680,78 @@ func (s *ArticleService) fillReactionSummary(article *model.Article, viewerID ui
 	count = 0
 	_ = s.db.Model(&model.ArticleFavorite{}).Where("article_id = ? AND user_id = ?", article.ID, viewerID).Count(&count).Error
 	article.IsFavorited = count > 0
+}
+
+func (s *ArticleService) fillReactionSummaryBatch(articles *[]model.Article, viewerID uint) {
+	if len(*articles) == 0 {
+		return
+	}
+
+	ids := make([]uint, len(*articles))
+	for i, a := range *articles {
+		ids[i] = a.ID
+	}
+
+	type countResult struct {
+		ArticleID uint
+		Count     int64
+	}
+
+	var likeCounts []countResult
+	s.db.Model(&model.ArticleLike{}).
+		Select("article_id, COUNT(*) as count").
+		Where("article_id IN ?", ids).
+		Group("article_id").
+		Scan(&likeCounts)
+
+	var favCounts []countResult
+	s.db.Model(&model.ArticleFavorite{}).
+		Select("article_id, COUNT(*) as count").
+		Where("article_id IN ?", ids).
+		Group("article_id").
+		Scan(&favCounts)
+
+	likeMap := make(map[uint]int64, len(likeCounts))
+	for _, r := range likeCounts {
+		likeMap[r.ArticleID] = r.Count
+	}
+	favMap := make(map[uint]int64, len(favCounts))
+	for _, r := range favCounts {
+		favMap[r.ArticleID] = r.Count
+	}
+
+	userLiked := make(map[uint]bool)
+	userFav := make(map[uint]bool)
+	if viewerID > 0 {
+		var userLikes []countResult
+		s.db.Model(&model.ArticleLike{}).
+			Select("article_id, COUNT(*) as count").
+			Where("article_id IN ? AND user_id = ?", ids, viewerID).
+			Group("article_id").
+			Scan(&userLikes)
+		for _, r := range userLikes {
+			userLiked[r.ArticleID] = r.Count > 0
+		}
+
+		var userFavs []countResult
+		s.db.Model(&model.ArticleFavorite{}).
+			Select("article_id, COUNT(*) as count").
+			Where("article_id IN ? AND user_id = ?", ids, viewerID).
+			Group("article_id").
+			Scan(&userFavs)
+		for _, r := range userFavs {
+			userFav[r.ArticleID] = r.Count > 0
+		}
+	}
+
+	for i := range *articles {
+		(*articles)[i].LikesCount = likeMap[(*articles)[i].ID]
+		(*articles)[i].FavoritesCount = favMap[(*articles)[i].ID]
+		if viewerID > 0 {
+			(*articles)[i].IsLiked = userLiked[(*articles)[i].ID]
+			(*articles)[i].IsFavorited = userFav[(*articles)[i].ID]
+		}
+	}
 }
 
 func normalizePagination(page, pageSize int) Pagination {

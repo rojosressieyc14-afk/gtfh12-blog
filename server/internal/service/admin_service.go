@@ -461,7 +461,7 @@ func (s *AdminService) BulkUpdateArticleTaxonomy(payload BulkArticleTaxonomyPayl
 
 		for index := range articles {
 			article := &articles[index]
-			if payload.CategoryID != nil || payload.CategoryID == nil {
+			if payload.CategoryID != nil {
 				if err := tx.Model(article).Update("category_id", payload.CategoryID).Error; err != nil {
 					return err
 				}

@@ -126,7 +126,9 @@ func normalizeModerationRune(r rune) rune {
 		return 'a'
 	case '5':
 		return 's'
-	case '6', '9':
+	case '6':
+		return 'b'
+	case '9':
 		return 'g'
 	case '7':
 		return 't'
