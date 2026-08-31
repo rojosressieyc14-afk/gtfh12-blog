@@ -72,7 +72,7 @@
         <div class="kb-doc-actions">
           <router-link class="ghost-btn" :to="`/user-center/knowledge-base/${$route.params.id}/editor/${currentDoc.id}`">编辑</router-link>
           <button class="ghost-btn" @click="handleDeleteDoc(currentDoc)">删除</button>
-          <button class="ghost-btn" @click="showGraph = true; loadGraph()">图谱</button>
+          <button class="ghost-btn" @click="$router.push({ name: 'uc-kb-graph', params: { id: $route.params.id } })">图谱</button>
         </div>
       </div>
       <div v-else class="kb-doc-empty">
@@ -100,21 +100,6 @@
         </div>
       </div>
     </aside>
-
-    <Teleport to="body">
-      <div v-if="showGraph" class="kb-graph-overlay" @click.self="showGraph = false">
-        <div class="kb-graph-modal">
-          <div class="kb-graph-header">
-            <h3>文档关系图谱</h3>
-            <button class="kb-graph-close" @click="showGraph = false">×</button>
-          </div>
-          <div class="kb-graph-body">
-            <svg ref="graphSvg" class="kb-graph-svg"></svg>
-            <div v-if="!graphData?.nodes?.length" class="kb-graph-empty">暂无文档关系数据</div>
-          </div>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 
@@ -123,7 +108,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import { getKnowledgeBase, getDocumentTree, listDocuments, deleteDocument, searchDocuments, getBacklinks, getGraphData, moveDocument } from "../api/knowledgeBase";
+import { getKnowledgeBase, getDocumentTree, listDocuments, deleteDocument, searchDocuments, getBacklinks, moveDocument } from "../api/knowledgeBase";
 import DocTree from "../components/DocTree.vue";
 import DocToc from "../components/DocToc.vue";
 
@@ -141,9 +126,6 @@ const searchResults = ref([]);
 const searchLoading = ref(false);
 let searchTimer = null;
 const backlinks = ref([]);
-const graphData = ref(null);
-const showGraph = ref(false);
-const graphSvg = ref(null);
 
 function onSearchInput() {
   clearTimeout(searchTimer);
@@ -189,107 +171,6 @@ async function loadBacklinks() {
     const res = await getBacklinks(route.params.id, currentDoc.value.id);
     backlinks.value = res.data.items || [];
   } catch { backlinks.value = []; }
-}
-
-async function loadGraph() {
-  try {
-    const res = await getGraphData(route.params.id);
-    graphData.value = res.data.graph || { nodes: [], edges: [] };
-  } catch { graphData.value = { nodes: [], edges: [] }; }
-}
-
-watch([graphData, showGraph], ([data, visible]) => {
-  if (!visible || !data?.nodes?.length || !graphSvg.value) return;
-  nextTick(() => renderGraph(data));
-});
-
-function renderGraph(data) {
-  const svg = graphSvg.value;
-  if (!svg) return;
-  const rect = svg.getBoundingClientRect();
-  const W = rect.width || 600;
-  const H = rect.height || 400;
-  svg.innerHTML = "";
-
-  const nodeMap = {};
-  data.nodes.forEach((n, i) => {
-    const angle = (2 * Math.PI * i) / data.nodes.length;
-    nodeMap[n.id] = { ...n, x: W/2 + 120 * Math.cos(angle), y: H/2 + 120 * Math.sin(angle), vx: 0, vy: 0 };
-  });
-
-  for (let iter = 0; iter < 120; iter++) {
-    data.nodes.forEach((n) => {
-      const a = nodeMap[n.id];
-      data.nodes.forEach((m) => {
-        if (n.id === m.id) return;
-        const b = nodeMap[m.id];
-        let dx = a.x - b.x, dy = a.y - b.y;
-        let dist = Math.sqrt(dx*dx + dy*dy) || 1;
-        let force = 3000 / (dist * dist);
-        a.vx += (dx / dist) * force;
-        a.vy += (dy / dist) * force;
-      });
-    });
-    data.edges.forEach((e) => {
-      const a = nodeMap[e.source], b = nodeMap[e.target];
-      if (!a || !b) return;
-      let dx = b.x - a.x, dy = b.y - a.y;
-      let dist = Math.sqrt(dx*dx + dy*dy) || 1;
-      let force = (dist - 100) * 0.005;
-      a.vx += (dx / dist) * force;
-      a.vy += (dy / dist) * force;
-      b.vx -= (dx / dist) * force;
-      b.vy -= (dy / dist) * force;
-    });
-    data.nodes.forEach((n) => {
-      const a = nodeMap[n.id];
-      a.vx *= 0.85; a.vy *= 0.85;
-      a.x += a.vx; a.y += a.vy;
-      a.x = Math.max(40, Math.min(W - 40, a.x));
-      a.y = Math.max(40, Math.min(H - 40, a.y));
-    });
-  }
-
-  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-  defs.innerHTML = `<marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(246,241,234,0.3)"/></marker>`;
-  svg.appendChild(defs);
-
-  data.edges.forEach((e) => {
-    const a = nodeMap[e.source], b = nodeMap[e.target];
-    if (!a || !b) return;
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", a.x); line.setAttribute("y1", a.y);
-    line.setAttribute("x2", b.x); line.setAttribute("y2", b.y);
-    line.setAttribute("stroke", "rgba(246,241,234,0.15)");
-    line.setAttribute("stroke-width", "1.5");
-    line.setAttribute("marker-end", "url(#arrow)");
-    svg.appendChild(line);
-  });
-
-  data.nodes.forEach((n) => {
-    const a = nodeMap[n.id];
-    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    g.style.cursor = "pointer";
-    g.addEventListener("click", () => {
-      const doc = allDocs.value.find(d => Number(d.id) === n.id);
-      if (doc) { currentDoc.value = doc; showGraph.value = false; }
-    });
-    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    circle.setAttribute("cx", a.x); circle.setAttribute("cy", a.y);
-    circle.setAttribute("r", Math.max(6, Math.min(16, 6 + n.links * 2)));
-    circle.setAttribute("fill", n.id === currentDoc.value?.id ? "#ff8a4c" : "rgba(255,138,76,0.6)");
-    circle.setAttribute("stroke", "#ff8a4c");
-    circle.setAttribute("stroke-width", n.id === currentDoc.value?.id ? "3" : "1");
-    g.appendChild(circle);
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    text.setAttribute("x", a.x); text.setAttribute("y", a.y + 22);
-    text.setAttribute("text-anchor", "middle");
-    text.setAttribute("fill", "rgba(246,241,234,0.7)");
-    text.setAttribute("font-size", "11");
-    text.textContent = n.title.length > 12 ? n.title.slice(0, 12) + "…" : n.title;
-    g.appendChild(text);
-    svg.appendChild(g);
-  });
 }
 
 function onDocContentClick(e) {
@@ -738,70 +619,6 @@ onUnmounted(() => tocObserver?.disconnect());
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.kb-graph-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(4px);
-}
-.kb-graph-modal {
-  background: #1a1a1a;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 16px;
-  width: min(90vw, 800px);
-  height: min(80vh, 560px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
-}
-.kb-graph-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-.kb-graph-header h3 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-}
-.kb-graph-close {
-  background: none;
-  border: none;
-  color: rgba(246,241,234,0.5);
-  font-size: 22px;
-  cursor: pointer;
-  padding: 0 4px;
-  line-height: 1;
-}
-.kb-graph-close:hover {
-  color: var(--accent);
-}
-.kb-graph-body {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-.kb-graph-svg {
-  width: 100%;
-  height: 100%;
-}
-.kb-graph-empty {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(246,241,234,0.3);
-  font-size: 14px;
 }
 
 :deep(.wiki-link) {

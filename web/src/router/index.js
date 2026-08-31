@@ -22,6 +22,7 @@ import KnowledgeBaseNoteEditor from "../views/KnowledgeBaseNoteEditor.vue";
 import KbNoteView from "../views/KbNoteView.vue";
 import PublicKnowledgeBases from "../views/PublicKnowledgeBases.vue";
 import PublicKBDetailView from "../views/PublicKBDetailView.vue";
+import KBGraphView from "../views/KBGraphView.vue";
 import ApiKeysView from "../views/ApiKeysView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import UserCenterLayout from "../components/UserCenterLayout.vue";
@@ -54,6 +55,7 @@ const routes = [
       { path: "knowledge-base/:id", name: "uc-knowledge-base-detail", component: KnowledgeBaseDetail, meta: { title: "知识库详情", sidebar: false } },
       { path: "knowledge-base/:id/editor", name: "uc-knowledge-base-editor", component: KnowledgeBaseNoteEditor, meta: { title: "新建笔记", sidebar: false } },
       { path: "knowledge-base/:id/editor/:noteId", name: "uc-knowledge-base-editor-edit", component: KnowledgeBaseNoteEditor, meta: { title: "编辑笔记", sidebar: false } },
+      { path: "knowledge-base/:id/graph", name: "uc-kb-graph", component: KBGraphView, meta: { title: "文档关系图谱", sidebar: false } },
       { path: "api-keys", name: "uc-api-keys", component: ApiKeysView, meta: { title: "API Key 管理" } },
       { path: "collections", name: "uc-collections", component: CollectionsView, meta: { title: "我的收藏" } },
       { path: "notifications", name: "uc-notifications", component: NotificationsView, meta: { title: "通知中心" } },

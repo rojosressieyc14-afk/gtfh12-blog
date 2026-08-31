@@ -86,10 +86,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { useUserStore } from "../stores/user";
 import { listPublicKBs, listKnowledgeBases } from "../api/knowledgeBase";
 
+const route = useRoute();
 const userStore = useUserStore();
 const myKbs = ref([]);
 const publicKbs = ref([]);
@@ -101,24 +103,19 @@ function formatDate(value) {
   return new Date(value).toLocaleDateString("zh-CN");
 }
 
-onMounted(async () => {
+async function loadData() {
+  loading.value = true;
   try {
     const tasks = [listPublicKBs()];
-    if (userStore.isLoggedIn) {
-      tasks.push(listKnowledgeBases());
-    }
+    if (userStore.isLoggedIn) tasks.push(listKnowledgeBases());
     const results = await Promise.all(tasks);
     publicKbs.value = results[0].data.items || [];
-    if (userStore.isLoggedIn && results[1]) {
-      myKbs.value = results[1].data.items || [];
-    }
-  } catch {
-    publicKbs.value = [];
-    myKbs.value = [];
-  } finally {
-    loading.value = false;
-  }
-});
+    if (userStore.isLoggedIn && results[1]) myKbs.value = results[1].data.items || [];
+  } catch { publicKbs.value = []; myKbs.value = []; } finally { loading.value = false; }
+}
+
+watch(() => route.fullPath, loadData);
+onMounted(loadData);
 </script>
 
 <style scoped>
