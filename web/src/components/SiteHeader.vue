@@ -19,7 +19,7 @@
       <router-link to="/">首页</router-link>
       <router-link to="/articles">文章</router-link>
       <router-link to="/projects">项目</router-link>
-      <router-link to="/knowledge-base">知识库</router-link>
+      <router-link to="/knowledge-bases">知识库</router-link>
       <router-link to="/interview">AI 面试官</router-link>
     </nav>
 
@@ -42,7 +42,7 @@
           <router-link to="/">首页</router-link>
           <router-link to="/articles">文章</router-link>
           <router-link to="/projects">项目</router-link>
-          <router-link to="/knowledge-base">知识库</router-link>
+          <router-link to="/knowledge-bases">知识库</router-link>
           <router-link to="/interview">AI 面试官</router-link>
           <hr v-if="userStore.isLoggedIn" />
           <router-link v-if="userStore.isLoggedIn" to="/user-center">个人中心</router-link>

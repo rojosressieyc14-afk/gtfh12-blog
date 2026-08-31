@@ -22,3 +22,6 @@ export const getPublicNote = (id) => client.get(`/kb-notes/${id}`);
 export const getBacklinks = (kbId, docId) => client.get(`/knowledge-bases/${kbId}/backlinks/${docId}`);
 export const getGraphData = (kbId) => client.get(`/knowledge-bases/${kbId}/graph`);
 export const listKbTags = (kbId) => client.get(`/knowledge-bases/${kbId}/tags`);
+
+export const listPublicKBs = () => client.get("/knowledge-bases/public");
+export const listPublicDocuments = (kbId) => client.get(`/knowledge-bases/${kbId}/public-documents`);

@@ -20,6 +20,8 @@ import KnowledgeBaseView from "../views/KnowledgeBaseView.vue";
 import KnowledgeBaseDetail from "../views/KnowledgeBaseDetail.vue";
 import KnowledgeBaseNoteEditor from "../views/KnowledgeBaseNoteEditor.vue";
 import KbNoteView from "../views/KbNoteView.vue";
+import PublicKnowledgeBases from "../views/PublicKnowledgeBases.vue";
+import PublicKBDetailView from "../views/PublicKBDetailView.vue";
 import ApiKeysView from "../views/ApiKeysView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import UserCenterLayout from "../components/UserCenterLayout.vue";
@@ -35,6 +37,8 @@ const routes = [
   { path: "/projects", name: "projects", component: ProjectsView, meta: { title: "项目" } },
   { path: "/projects/:id", name: "project-detail", component: ProjectDetailView, meta: { title: "项目详情" } },
   { path: "/interview", name: "interview", component: InterviewView, meta: { title: "AI 面试官", ...authGuard } },
+  { path: "/knowledge-bases", name: "knowledge-bases", component: PublicKnowledgeBases, meta: { title: "知识库" } },
+  { path: "/knowledge-bases/:id", name: "knowledge-bases-detail", component: PublicKBDetailView, meta: { title: "知识库详情" } },
   { path: "/author/:id", name: "author", component: AuthorView, meta: { title: "作者主页" } },
 
   {
@@ -64,8 +68,6 @@ const routes = [
 
   { path: "/my-articles", redirect: "/user-center/articles" },
   { path: "/my-projects", redirect: "/user-center/projects" },
-  { path: "/knowledge-base", redirect: "/user-center/knowledge-base" },
-  { path: "/knowledge-base/:id", redirect: to => `/user-center/knowledge-base/${to.params.id}` },
   { path: "/api-keys", redirect: "/user-center/api-keys" },
   { path: "/collections", redirect: "/user-center/collections" },
   { path: "/notifications", redirect: "/user-center/notifications" },

@@ -92,6 +92,8 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 		api.GET("/projects/:id", projectHandler.Detail)
 		api.GET("/articles/:id", articleHandler.Detail)
 		api.GET("/articles/:id/comments", commentHandler.List)
+		api.GET("/knowledge-bases/public", kbHandler.ListPublicKBs)
+		api.GET("/knowledge-bases/:id/public-documents", kbHandler.ListPublicDocuments)
 
 		api.GET("/auth/me", middleware.RequireAuth(), authHandler.Me)
 		api.PUT("/auth/me", middleware.RequireAuth(), authHandler.UpdateProfile)

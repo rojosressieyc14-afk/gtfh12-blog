@@ -81,6 +81,91 @@ func (s *KnowledgeBaseService) List(userID uint) ([]model.KnowledgeBase, error) 
 	return kbs, nil
 }
 
+type PublicKBItem struct {
+	ID          uint      `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	DocCount    int       `json:"docCount"`
+	PublicCount int       `json:"publicCount"`
+	UserName    string    `json:"userName"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+func (s *KnowledgeBaseService) ListPublicKBs() ([]PublicKBItem, error) {
+	var kbs []model.KnowledgeBase
+	if err := s.db.Find(&kbs).Error; err != nil {
+		return nil, err
+	}
+
+	if len(kbs) == 0 {
+		return []PublicKBItem{}, nil
+	}
+
+	kbIDs := make([]uint, len(kbs))
+	for i, kb := range kbs {
+		kbIDs[i] = kb.ID
+	}
+
+	type countResult struct {
+		KnowledgeBaseID uint
+		Cnt              int
+	}
+	var counts []countResult
+	s.db.Model(&model.KnowledgeDocument{}).
+		Where("knowledge_base_id IN ? AND is_public = ?", kbIDs, true).
+		Select("knowledge_base_id, COUNT(*) as cnt").
+		Group("knowledge_base_id").
+		Find(&counts)
+
+	countMap := make(map[uint]int, len(counts))
+	for _, c := range counts {
+		countMap[c.KnowledgeBaseID] = c.Cnt
+	}
+
+	userIDs := make([]uint, 0, len(kbs))
+	uidSeen := make(map[uint]struct{})
+	for _, kb := range kbs {
+		if _, ok := uidSeen[kb.UserID]; !ok {
+			userIDs = append(userIDs, kb.UserID)
+			uidSeen[kb.UserID] = struct{}{}
+		}
+	}
+	var users []model.User
+	s.db.Where("id IN ?", userIDs).Select("id, username").Find(&users)
+	nameMap := make(map[uint]string, len(users))
+	for _, u := range users {
+		nameMap[u.ID] = u.Username
+	}
+
+	var result []PublicKBItem
+	for _, kb := range kbs {
+		pubCount := countMap[kb.ID]
+		if pubCount == 0 {
+			continue
+		}
+		result = append(result, PublicKBItem{
+			ID:          kb.ID,
+			Name:        kb.Name,
+			Description: kb.Description,
+			DocCount:    kb.DocCount,
+			PublicCount: pubCount,
+			UserName:    nameMap[kb.UserID],
+			UpdatedAt:   kb.UpdatedAt,
+		})
+	}
+	return result, nil
+}
+
+func (s *KnowledgeBaseService) ListPublicDocuments(kbID uint) ([]model.KnowledgeDocument, error) {
+	var docs []model.KnowledgeDocument
+	if err := s.db.Where("knowledge_base_id = ? AND is_public = ?", kbID, true).
+		Preload("Category").Preload("Tags").
+		Order("created_at desc").Find(&docs).Error; err != nil {
+		return nil, err
+	}
+	return docs, nil
+}
+
 func (s *KnowledgeBaseService) GetByID(kbID, userID uint) (*model.KnowledgeBase, error) {
 	var kb model.KnowledgeBase
 	if err := s.db.First(&kb, kbID).Error; err != nil {

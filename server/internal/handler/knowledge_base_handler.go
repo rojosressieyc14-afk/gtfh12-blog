@@ -47,6 +47,29 @@ func (h *KnowledgeBaseHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"items": kbs})
 }
 
+func (h *KnowledgeBaseHandler) ListPublicKBs(c *gin.Context) {
+	items, err := h.svc.ListPublicKBs()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "加载知识库列表失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"items": items})
+}
+
+func (h *KnowledgeBaseHandler) ListPublicDocuments(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	if id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+		return
+	}
+	docs, err := h.svc.ListPublicDocuments(uint(id))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "加载文档列表失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"items": docs})
+}
+
 func (h *KnowledgeBaseHandler) Get(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
 	id, _ := strconv.Atoi(c.Param("id"))
