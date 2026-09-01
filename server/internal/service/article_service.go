@@ -1,11 +1,14 @@
 package service
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
+	"blog/server/internal/cache"
 	"blog/server/internal/model"
 	"gorm.io/gorm"
 )
@@ -56,6 +59,10 @@ func NewArticleService(db *gorm.DB) *ArticleService {
 	return &ArticleService{db: db}
 }
 
+func (s *ArticleService) invalidateArticleCache(ctx context.Context) {
+	cache.Invalidate(ctx, "articles:list:*", "articles:trending:*", "articles:feed:*")
+}
+
 func (s *ArticleService) Create(authorID uint, role string, payload ArticlePayload) (*model.Article, error) {
 	var author model.User
 	if err := s.db.First(&author, authorID).Error; err != nil {
@@ -99,6 +106,7 @@ func (s *ArticleService) Create(authorID uint, role string, payload ArticlePaylo
 		return nil, err
 	}
 
+	s.invalidateArticleCache(context.Background())
 	return s.GetByID(article.ID, authorID)
 }
 
@@ -147,6 +155,7 @@ func (s *ArticleService) Update(articleID, userID uint, role string, payload Art
 		return nil, err
 	}
 
+	s.invalidateArticleCache(context.Background())
 	return s.GetByID(article.ID, userID)
 }
 
@@ -216,7 +225,40 @@ func (s *ArticleService) Submit(articleID, userID uint, role string) (*model.Art
 	return s.GetByID(articleID, userID)
 }
 
+type articleListCache struct {
+	Articles  []model.Article
+	Pagination Pagination
+}
+
+func articleListCacheKey(filter PublishedArticleFilter) string {
+	catID := ""
+	if filter.CategoryID != nil {
+		catID = strconv.FormatUint(uint64(*filter.CategoryID), 10)
+	}
+	return fmt.Sprintf("articles:list:%d:%s:%s:%s:%d",
+		filter.Page, filter.Keyword, catID, filter.Tag, filter.AuthorID)
+}
+
 func (s *ArticleService) ListPublished(filter PublishedArticleFilter) ([]model.Article, Pagination, error) {
+	ctx := context.Background()
+	key := articleListCacheKey(filter)
+
+	var cached articleListCache
+	if err := cache.GetOrSet(ctx, key, 2*time.Minute, &cached, func() error {
+		articles, pagination, err := s.listPublishedDirect(filter)
+		if err != nil {
+			return err
+		}
+		cached.Articles = articles
+		cached.Pagination = pagination
+		return nil
+	}); err != nil {
+		return s.listPublishedDirect(filter)
+	}
+	return cached.Articles, cached.Pagination, nil
+}
+
+func (s *ArticleService) listPublishedDirect(filter PublishedArticleFilter) ([]model.Article, Pagination, error) {
 	var articles []model.Article
 	var total int64
 	pagination := normalizePagination(filter.Page, filter.PageSize)
@@ -277,12 +319,17 @@ func (s *ArticleService) ListFeed(limit int) ([]model.Article, error) {
 	if limit <= 0 {
 		limit = 20
 	}
+	ctx := context.Background()
+	key := fmt.Sprintf("articles:feed:%d", limit)
+
 	var articles []model.Article
-	err := s.baseArticleQuery().
-		Where("status = ? AND is_private = ?", model.ArticlePublished, false).
-		Order("published_at desc, created_at desc").
-		Limit(limit).
-		Find(&articles).Error
+	err := cache.GetOrSet(ctx, key, 5*time.Minute, &articles, func() error {
+		return s.baseArticleQuery().
+			Where("status = ? AND is_private = ?", model.ArticlePublished, false).
+			Order("published_at desc, created_at desc").
+			Limit(limit).
+			Find(&articles).Error
+	})
 	return articles, err
 }
 
@@ -290,28 +337,33 @@ func (s *ArticleService) ListTrending(limit int) ([]model.Article, error) {
 	if limit <= 0 {
 		limit = 6
 	}
+	ctx := context.Background()
+	key := fmt.Sprintf("articles:trending:%d", limit)
+
 	var articles []model.Article
-	err := s.baseArticleQuery().
-		Where("status = ? AND is_private = ?", model.ArticlePublished, false).
-		Order("published_at desc, created_at desc").
-		Limit(limit).
-		Find(&articles).Error
+	err := cache.GetOrSet(ctx, key, 10*time.Minute, &articles, func() error {
+		if err := s.baseArticleQuery().
+			Where("status = ? AND is_private = ?", model.ArticlePublished, false).
+			Order("published_at desc, created_at desc").
+			Limit(limit).
+			Find(&articles).Error; err != nil {
+			return err
+		}
+		s.fillReactionSummaryBatch(&articles, 0)
+		for i := 0; i < len(articles); i++ {
+			for j := i + 1; j < len(articles); j++ {
+				leftScore := articles[i].LikesCount*2 + articles[i].FavoritesCount
+				rightScore := articles[j].LikesCount*2 + articles[j].FavoritesCount
+				if rightScore > leftScore {
+					articles[i], articles[j] = articles[j], articles[i]
+				}
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	s.fillReactionSummaryBatch(&articles, 0)
-
-	for i := 0; i < len(articles); i++ {
-		for j := i + 1; j < len(articles); j++ {
-			leftScore := articles[i].LikesCount*2 + articles[i].FavoritesCount
-			rightScore := articles[j].LikesCount*2 + articles[j].FavoritesCount
-			if rightScore > leftScore {
-				articles[i], articles[j] = articles[j], articles[i]
-			}
-		}
-	}
-
 	return articles, nil
 }
 
@@ -372,8 +424,16 @@ func (s *ArticleService) GetByID(articleID uint, viewerID uint) (*model.Article,
 		return nil, err
 	}
 	if article.Status == model.ArticlePublished && !article.IsPrivate {
-		_ = s.db.Model(&article).UpdateColumn("view_count", gorm.Expr("view_count + ?", 1)).Error
-		article.ViewCount++
+		// Batch view count in Redis, sync to MySQL periodically
+		ctx := context.Background()
+		if cache.RDB != nil {
+			cache.HIncrBy(ctx, "article:views", strconv.FormatUint(uint64(articleID), 10), 1)
+			delta, _ := cache.RDB.HGet(ctx, "article:views", strconv.FormatUint(uint64(articleID), 10)).Int64()
+			article.ViewCount += delta
+		} else {
+			_ = s.db.Model(&article).UpdateColumn("view_count", gorm.Expr("view_count + ?", 1)).Error
+			article.ViewCount++
+		}
 		today := time.Now().Format("2006-01-02")
 		var dv model.DailyView
 		err := s.db.Where("article_id = ? AND date = ?", articleID, today).First(&dv).Error
@@ -385,6 +445,28 @@ func (s *ArticleService) GetByID(articleID uint, viewerID uint) (*model.Article,
 	}
 	s.fillReactionSummary(&article, viewerID)
 	return &article, nil
+}
+
+// SyncViewCounts flushes accumulated view counts from Redis to MySQL.
+func (s *ArticleService) SyncViewCounts() {
+	ctx := context.Background()
+	if cache.RDB == nil {
+		return
+	}
+	all, err := cache.HGetAll(ctx, "article:views")
+	if err != nil || len(all) == 0 {
+		return
+	}
+	for idStr, deltaStr := range all {
+		var delta int64
+		fmt.Sscanf(deltaStr, "%d", &delta)
+		if delta <= 0 {
+			continue
+		}
+		s.db.Model(&model.Article{}).Where("id = ?", idStr).
+			UpdateColumn("view_count", gorm.Expr("view_count + ?", delta))
+	}
+	cache.RDB.Del(ctx, "article:views")
 }
 
 type DailyStatsItem struct {
@@ -619,7 +701,11 @@ func (s *ArticleService) Delete(articleID, userID uint, role string) error {
 		if err := tx.Model(&article).Association("Tags").Clear(); err != nil {
 			return err
 		}
-		return tx.Delete(&article).Error
+		if err := tx.Delete(&article).Error; err != nil {
+			return err
+		}
+		s.invalidateArticleCache(context.Background())
+		return nil
 	})
 }
 

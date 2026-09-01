@@ -22,8 +22,6 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 	r.Use(middleware.RequestLogger())
 	r.Use(middleware.SecurityHeaders())
 
-	loginLimiter := middleware.NewRateLimiter(5, time.Minute)
-	registerLimiter := middleware.NewRateLimiter(5, time.Minute)
 	_ = r.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 	allowOrigins := resolveAllowedOrigins(cfg)
 	r.Use(cors.New(cors.Config{
@@ -78,8 +76,8 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 	api := r.Group("/api")
 	api.Use(middleware.CSRF())
 	{
-		api.POST("/auth/register", middleware.RateLimit(registerLimiter), authHandler.Register)
-		api.POST("/auth/login", middleware.RateLimit(loginLimiter), authHandler.Login)
+		api.POST("/auth/register", middleware.RedisRateLimit("register", 5, time.Minute), authHandler.Register)
+		api.POST("/auth/login", middleware.RedisRateLimit("login", 5, time.Minute), authHandler.Login)
 		api.POST("/auth/logout", authHandler.Logout)
 		api.GET("/authors/recommended", authHandler.RecommendedAuthors)
 		api.GET("/authors/:id", authHandler.AuthorProfile)

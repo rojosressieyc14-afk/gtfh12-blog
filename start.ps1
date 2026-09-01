@@ -35,6 +35,22 @@ if (-not $mysql -or $mysql.Status -ne 'Running') {
 }
 Write-Host '[OK] MySQL80 running' -ForegroundColor Green
 
+# 2b. ensure Redis
+$redisProc = Get-Process redis-server -ErrorAction SilentlyContinue
+if (-not $redisProc) {
+    Write-Host '[..] starting Redis...' -ForegroundColor Yellow
+    $redisExe = Get-Command redis-server -ErrorAction SilentlyContinue
+    if ($redisExe) {
+        $null = Start-Process -WindowStyle Hidden -FilePath 'redis-server' -PassThru
+        Start-Sleep -Seconds 2
+        Write-Host '[OK] Redis started' -ForegroundColor Green
+    } else {
+        Write-Host '[SKIP] redis-server not found in PATH (install or use docker-compose up -d)' -ForegroundColor DarkYellow
+    }
+} else {
+    Write-Host '[OK] Redis already running' -ForegroundColor Green
+}
+
 # 3. ensure Qdrant
 $qdrantExe = Join-Path $Root 'qdrant\qdrant.exe'
 $qdrantData = Join-Path $Root 'qdrant\data'

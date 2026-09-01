@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -30,6 +31,9 @@ type Config struct {
 	QdrantAddr    string
 	QdrantAPIKey  string
 	APIEncryptionKey string
+	RedisAddr     string
+	RedisPassword string
+	RedisDB       int
 }
 
 func Load() Config {
@@ -57,6 +61,9 @@ func Load() Config {
 		QdrantAddr:    getEnv("QDRANT_ADDR", "http://localhost:6333"),
 		QdrantAPIKey:  getEnv("QDRANT_API_KEY", ""),
 		APIEncryptionKey: getEnv("API_ENCRYPTION_KEY", ""),
+		RedisAddr:     getEnv("REDIS_ADDR", "127.0.0.1:6379"),
+		RedisPassword: getEnv("REDIS_PASSWORD", ""),
+		RedisDB:       getEnvInt("REDIS_DB", 0),
 	}
 	cfg.normalize()
 	return cfg
@@ -74,6 +81,18 @@ func getEnv(key, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+func getEnvInt(key string, fallback int) int {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	n, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+	return n
 }
 
 func (cfg *Config) normalize() {
@@ -101,6 +120,11 @@ func (cfg *Config) normalize() {
 	}
 	cfg.QdrantAPIKey = strings.TrimSpace(cfg.QdrantAPIKey)
 	cfg.APIEncryptionKey = strings.TrimSpace(cfg.APIEncryptionKey)
+	cfg.RedisAddr = strings.TrimSpace(cfg.RedisAddr)
+	if cfg.RedisAddr == "" {
+		cfg.RedisAddr = "127.0.0.1:6379"
+	}
+	cfg.RedisPassword = strings.TrimSpace(cfg.RedisPassword)
 }
 
 func (cfg Config) Validate() error {

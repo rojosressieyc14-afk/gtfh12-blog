@@ -2,7 +2,9 @@ package main
 
 import (
 	"os"
+	"time"
 
+	"blog/server/internal/cache"
 	"blog/server/internal/config"
 	"blog/server/internal/database"
 	"blog/server/internal/logger"
@@ -58,6 +60,23 @@ func main() {
 	if err := service.LoadSensitiveWords(db); err != nil {
 		l.Fatal("load sensitive words", zap.Error(err))
 	}
+
+	if err := cache.Init(cfg.RedisAddr, cfg.RedisPassword, cfg.RedisDB); err != nil {
+		l.Warn("redis unavailable, running without cache", zap.Error(err))
+	} else {
+		l.Info("redis connected", zap.String("addr", cfg.RedisAddr))
+		defer cache.Close()
+	}
+
+	// Periodic view count sync from Redis to MySQL
+	articleSvc := service.NewArticleService(db)
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			articleSvc.SyncViewCounts()
+		}
+	}()
 
 	r := router.New(cfg, db)
 	l.Info("server listening", zap.String("port", cfg.ServerPort))
