@@ -65,8 +65,13 @@ func RequireAuth() gin.HandlerFunc {
 			ID:       claims.UserID,
 			Username: claims.Username,
 			Role:     claims.Role,
-			Status:   "active",
+			Status:   claims.Status,
 		})
+		if claims.Status == "banned" {
+			c.JSON(http.StatusForbidden, gin.H{"message": "账户已被封禁"})
+			c.Abort()
+			return
+		}
 		c.Next()
 	}
 }

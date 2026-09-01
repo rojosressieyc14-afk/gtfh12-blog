@@ -273,7 +273,7 @@ func TestAdminLogin(t *testing.T) {
 		t.Fatalf("create admin: %v", err)
 	}
 
-	adminToken, err := utils.GenerateJWT(admin.ID, admin.Username, model.RoleAdmin, utils.TokenTTLDefault)
+	adminToken, err := utils.GenerateJWT(admin.ID, admin.Username, model.RoleAdmin, admin.Status, utils.TokenTTLDefault)
 	if err != nil {
 		t.Fatalf("generate admin token: %v", err)
 	}
@@ -287,7 +287,7 @@ func TestAdminLogin(t *testing.T) {
 	if err := db.Create(&user).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
-	userToken, err := utils.GenerateJWT(user.ID, user.Username, model.RoleUser, utils.TokenTTLDefault)
+	userToken, err := utils.GenerateJWT(user.ID, user.Username, model.RoleUser, user.Status, utils.TokenTTLDefault)
 	if err != nil {
 		t.Fatalf("generate user token: %v", err)
 	}

@@ -162,8 +162,9 @@ function selectSearchResult(r) {
 
 function highlightSnippet(snippet) {
   if (!searchKeyword.value.trim()) return snippet;
+  const safe = DOMPurify.sanitize(snippet);
   const kw = searchKeyword.value.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return snippet.replace(new RegExp(`(${kw})`, "gi"), '<mark>$1</mark>');
+  return safe.replace(new RegExp(`(${kw})`, "gi"), '<mark>$1</mark>');
 }
 
 async function loadBacklinks() {

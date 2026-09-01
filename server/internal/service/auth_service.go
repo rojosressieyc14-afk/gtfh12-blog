@@ -73,7 +73,7 @@ func (s *AuthService) Register(username, password string) (*model.User, string, 
 		return nil, "", err
 	}
 
-	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role, utils.TokenTTLDefault)
+	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role, user.Status, utils.TokenTTLDefault)
 	return &user, token, err
 }
 
@@ -93,7 +93,7 @@ func (s *AuthService) Login(username, password string, remember bool) (*model.Us
 	if remember {
 		ttl = utils.TokenTTLRemember
 	}
-	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role, ttl)
+	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role, user.Status, ttl)
 	return &user, token, err
 }
 

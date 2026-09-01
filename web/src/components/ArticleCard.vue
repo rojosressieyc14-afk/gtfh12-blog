@@ -24,6 +24,7 @@
 
 <script setup>
 import { computed } from "vue";
+import DOMPurify from "dompurify";
 import { toAssetUrl } from "../utils/asset";
 
 const props = defineProps({
@@ -33,8 +34,9 @@ const props = defineProps({
 
 function highlight(text) {
   if (!props.keyword || !text) return text;
+  const safe = DOMPurify.sanitize(text);
   const escaped = props.keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return text.replace(new RegExp(`(${escaped})`, "gi"), "<mark>$1</mark>");
+  return safe.replace(new RegExp(`(${escaped})`, "gi"), "<mark>$1</mark>");
 }
 
 const statusLabel = computed(() => {

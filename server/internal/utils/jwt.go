@@ -15,6 +15,7 @@ type Claims struct {
 	UserID   uint   `json:"userId"`
 	Username string `json:"username"`
 	Role     string `json:"role"`
+	Status   string `json:"status"`
 	jwt.RegisteredClaims
 }
 
@@ -73,7 +74,7 @@ func InitKeys(privateKeyPath, publicKeyPath string) error {
 	return nil
 }
 
-func GenerateJWT(userID uint, username, role string, ttl time.Duration) (string, error) {
+func GenerateJWT(userID uint, username, role, status string, ttl time.Duration) (string, error) {
 	if privateKey == nil {
 		return "", fmt.Errorf("JWT private key not loaded, call InitKeys first")
 	}
@@ -85,6 +86,7 @@ func GenerateJWT(userID uint, username, role string, ttl time.Duration) (string,
 		UserID:   userID,
 		Username: username,
 		Role:     role,
+		Status:   status,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

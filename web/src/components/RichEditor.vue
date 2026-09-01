@@ -261,7 +261,8 @@ function setLink() {
     editor.value.chain().focus().extendMarkRange("link").unsetLink().run();
     return;
   }
-  editor.value.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  const safe = url.replace(/^(javascript|data|vbscript):/i, "#");
+  editor.value.chain().focus().extendMarkRange("link").setLink({ href: safe }).run();
 }
 
 function triggerImageUpload() {

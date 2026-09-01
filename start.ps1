@@ -1,7 +1,16 @@
 param([switch]$NoAdmin)
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$mysqlPass = 'Lingjieyuan1'
+
+# Read DB password from environment variable; prompt if not set
+$mysqlPass = $env:PULSEBLOG_DB_PASSWORD
+if (-not $mysqlPass) {
+    $mysqlPass = Read-Host 'Enter MySQL root password'
+    if (-not $mysqlPass) {
+        Write-Host '[FAIL] MySQL password is required' -ForegroundColor Red
+        exit 1
+    }
+}
 
 Write-Host '=== PulseBlog Startup ===' -ForegroundColor Cyan
 
@@ -48,13 +57,19 @@ if (Test-Path $qdrantExe) {
 # 4. ensure .env
 $envFile = Join-Path $Root '.env'
 if (-not (Test-Path $envFile)) {
-    Write-Host '[..] creating .env...' -ForegroundColor Yellow
-@"
+    Write-Host '[..] creating .env from environment or prompts...' -ForegroundColor Yellow
+    $jwtSecret = $env:PULSEBLOG_JWT_SECRET
+    if (-not $jwtSecret) { $jwtSecret = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N') }
+    $adminUser = $env:PULSEBLOG_ADMIN_USERNAME
+    if (-not $adminUser) { $adminUser = 'admin' }
+    $adminPass = $env:PULSEBLOG_ADMIN_PASSWORD
+    if (-not $adminPass) { $adminPass = Read-Host 'Enter default admin password' }
+    @"
 DB_PASSWORD=$mysqlPass
 DB_NAME=blog_system
-JWT_SECRET=dev-jwt-secret-key-for-local-development-at-least-32-chars
-DEFAULT_ADMIN_USERNAME=admin
-DEFAULT_ADMIN_PASSWORD=admin123
+JWT_SECRET=$jwtSecret
+DEFAULT_ADMIN_USERNAME=$adminUser
+DEFAULT_ADMIN_PASSWORD=$adminPass
 WEB_ORIGIN=http://localhost:5173
 ADMIN_ORIGIN=http://localhost:5174
 GIN_MODE=debug
@@ -71,9 +86,13 @@ Write-Host '[OK] .env ready' -ForegroundColor Green
 
 # 5. start backend (new window, port 8080)
 Write-Host '[..] starting backend...' -ForegroundColor Yellow
+# Read JWT secret from .env if not in environment
+if (-not $env:JWT_SECRET) {
+    $envMatch = Select-String -Path $envFile -Pattern '^JWT_SECRET=(.+)$'
+    if ($envMatch) { $env:JWT_SECRET = $envMatch.Matches[0].Groups[1].Value }
+}
 $env:DB_PASSWORD = $mysqlPass
 $env:DB_NAME = 'blog_system'
-$env:JWT_SECRET = 'dev-jwt-secret-key-for-local-development-at-least-32-chars'
 $env:GIN_MODE = 'debug'
 $env:WEB_ORIGIN = 'http://localhost:5173'
 $env:ADMIN_ORIGIN = 'http://localhost:5174'
