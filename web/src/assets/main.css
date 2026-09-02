@@ -1567,6 +1567,109 @@ select.field-input {
   }
 }
 
+@media (max-width: 768px) {
+  .shell {
+    padding: 16px;
+  }
+
+  .page {
+    padding: 0 4px;
+  }
+
+  .site-header {
+    padding: 14px 0;
+  }
+
+  .site-header__nav {
+    gap: 10px;
+  }
+
+  .hero-panel {
+    padding: 32px 20px;
+  }
+
+  .hero-panel h1 {
+    font-size: 1.6rem;
+  }
+
+  .hero-panel p {
+    font-size: 0.92rem;
+  }
+
+  .content-section {
+    padding: 24px 0;
+  }
+
+  .section-head h2 {
+    font-size: 1.3rem;
+  }
+
+  .ghost-btn,
+  .solid-btn {
+    padding: 10px 18px;
+    font-size: 0.88rem;
+  }
+
+  .field-input {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+
+  .article-grid {
+    gap: 14px;
+  }
+
+  .article-card {
+    border-radius: 18px;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .shell {
+    padding: 12px;
+  }
+
+  .hero-panel h1 {
+    font-size: 1.3rem;
+  }
+
+  .hero-panel__actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .ghost-btn,
+  .solid-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .articles-hero__stats {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .filter-select-home {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+  }
+
+  .pager-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rich-editor__toolbar {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .toolbar-group {
+    gap: 2px;
+  }
+}
+
 mark {
   background: rgba(255, 138, 76, 0.3);
   color: inherit;
