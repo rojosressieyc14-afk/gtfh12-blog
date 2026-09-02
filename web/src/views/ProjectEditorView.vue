@@ -223,6 +223,7 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { createProject, getMyProject, submitProject, updateProject } from "../api/project";
 import { uploadImage } from "../api/upload";
+import { compressImage } from "../utils/compressImage";
 import { toAssetUrl } from "../utils/asset";
 import { useUserStore } from "../stores/user";
 import RichEditor from "../components/RichEditor.vue";
@@ -412,7 +413,8 @@ async function submitForReview() {
 async function handleUpload(event) {
   const [file] = event.target.files || [];
   if (!file) return;
-  const { data } = await uploadImage(file);
+  const compressed = await compressImage(file);
+  const { data } = await uploadImage(compressed);
   form.coverImage = data.url;
 }
 

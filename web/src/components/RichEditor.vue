@@ -176,6 +176,7 @@ import Underline from "@tiptap/extension-underline";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import { uploadImage } from "../api/upload";
+import { compressImage } from "../utils/compressImage";
 
 const props = defineProps({
   modelValue: { type: String, default: "" },
@@ -278,7 +279,8 @@ async function handleImageUpload(event) {
 
 async function uploadAndInsertImage(file) {
   try {
-    const { data } = await uploadImage(file);
+    const compressed = await compressImage(file);
+    const { data } = await uploadImage(compressed);
     editor.value.chain().focus().setImage({ src: data.url }).run();
   } catch {
     window.alert("图片上传失败，请稍后重试。");

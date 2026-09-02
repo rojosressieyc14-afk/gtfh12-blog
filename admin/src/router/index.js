@@ -1,13 +1,14 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAdminStore } from "../stores/auth";
-import LoginView from "../views/LoginView.vue";
-import DashboardView from "../views/DashboardView.vue";
-import ModerationHitsView from "../views/ModerationHitsView.vue";
-import SensitiveWordsView from "../views/SensitiveWordsView.vue";
-import CommentsView from "../views/CommentsView.vue";
-import LogsView from "../views/LogsView.vue";
-import UploadsView from "../views/UploadsView.vue";
-import SettingsView from "../views/SettingsView.vue";
+
+const LoginView = () => import("../views/LoginView.vue");
+const DashboardView = () => import("../views/DashboardView.vue");
+const ModerationHitsView = () => import("../views/ModerationHitsView.vue");
+const SensitiveWordsView = () => import("../views/SensitiveWordsView.vue");
+const CommentsView = () => import("../views/CommentsView.vue");
+const LogsView = () => import("../views/LogsView.vue");
+const UploadsView = () => import("../views/UploadsView.vue");
+const SettingsView = () => import("../views/SettingsView.vue");
 
 const router = createRouter({
   history: createWebHistory("/PulseBlog/admin/"),

@@ -170,6 +170,7 @@ import DOMPurify from "dompurify";
 import { createArticle, getArticle, submitArticle, updateArticle } from "../api/article";
 import { getMetadata } from "../api/meta";
 import { uploadImage } from "../api/upload";
+import { compressImage } from "../utils/compressImage";
 import { useUserStore } from "../stores/user";
 import { toAssetUrl } from "../utils/asset";
 import RichEditor from "../components/RichEditor.vue";
@@ -423,7 +424,8 @@ async function autosaveToServer() {
 async function handleUpload(event) {
   const [file] = event.target.files || [];
   if (!file) return;
-  const { data } = await uploadImage(file);
+  const compressed = await compressImage(file);
+  const { data } = await uploadImage(compressed);
   form.coverImage = data.url;
 }
 

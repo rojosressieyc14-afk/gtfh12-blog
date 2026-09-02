@@ -222,6 +222,7 @@
 <script setup>
 import { computed, reactive, ref, watchEffect } from "vue";
 import { uploadImage } from "../api/upload";
+import { compressImage } from "../utils/compressImage";
 import { useUserStore } from "../stores/user";
 import { toAssetUrl } from "../utils/asset";
 
@@ -311,7 +312,8 @@ async function handleAvatarUpload(event) {
 
   uploading.value = true;
   try {
-    const { data } = await uploadImage(file);
+    const compressed = await compressImage(file);
+    const { data } = await uploadImage(compressed);
     form.avatar = data.url;
   } finally {
     uploading.value = false;

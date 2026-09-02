@@ -26,6 +26,7 @@
     "@tiptap/vue-3": "^3.30.5",
     "@unhead/vue": "^3.2.1",
     "axios": "^1.8.4",
+    "browser-image-compression": "^2.0.2",
     "dompurify": "^3.4.8",
     "highlight.js": "^11.11.1",
     "lowlight": "^3.3.0",
