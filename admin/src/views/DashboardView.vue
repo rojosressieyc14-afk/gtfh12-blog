@@ -176,6 +176,7 @@ import {
 } from "../api/dashboard";
 import { getMetadata } from "../api/meta";
 import { useAdminStore } from "../stores/auth";
+import { formatDate } from "../utils/date";
 
 import AIReviewPanel from "../components/AIReviewPanel.vue";
 import DashboardOverview from "../components/dashboard/DashboardOverview.vue";
@@ -185,6 +186,7 @@ import ProjectReviewPanel from "../components/dashboard/ProjectReviewPanel.vue";
 import UserManagementSection from "../components/dashboard/UserManagementSection.vue";
 import ArticleManagementSection from "../components/dashboard/ArticleManagementSection.vue";
 import ProjectManagementSection from "../components/dashboard/ProjectManagementSection.vue";
+import { useFlashMessage } from "../composables/useFlashMessage";
 
 const router = useRouter();
 const store = useAdminStore();
@@ -194,7 +196,7 @@ const sidebarOpen = ref(false);
 const stats = ref({});
 const categories = ref([]);
 const tags = ref([]);
-const flash = ref("");
+const { flash, say } = useFlashMessage();
 
 // ── AI review state ────────────────────────────────────────────────────
 const aiReviewVisible = ref(false);
@@ -237,19 +239,6 @@ const reviewReasonPresets = [
 ];
 
 // ── Shared helpers ─────────────────────────────────────────────────────
-function say(message) {
-  flash.value = message;
-  window.setTimeout(() => {
-    if (flash.value === message) {
-      flash.value = "";
-    }
-  }, 2200);
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleString("zh-CN") : "暂无时间";
-}
-
 function statusLabel(status) {
   return {
     draft: "草稿",

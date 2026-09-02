@@ -65,6 +65,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { deleteProject, listMyProjects } from "../api/project";
+import { formatDate } from "../utils/date";
 
 const projects = ref([]);
 const page = ref(1);
@@ -108,10 +109,6 @@ async function handleDelete(id, title) {
 async function goToPage(nextPage) {
   page.value = nextPage;
   await loadMine();
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleString("zh-CN");
 }
 
 onMounted(loadMine);

@@ -97,9 +97,10 @@ func RateLimit(limiter *RateLimiter) gin.HandlerFunc {
 // RedisRateLimit uses Redis INCR + EXPIRE for distributed rate limiting.
 // Falls back to in-memory if Redis is unavailable.
 func RedisRateLimit(prefix string, limit int, window time.Duration) gin.HandlerFunc {
+	fallback := NewRateLimiter(limit, window)
 	return func(c *gin.Context) {
 		if cache.RDB == nil {
-			c.Next()
+			RateLimit(fallback)(c)
 			return
 		}
 
@@ -108,7 +109,7 @@ func RedisRateLimit(prefix string, limit int, window time.Duration) gin.HandlerF
 
 		count, err := cache.RDB.Incr(ctx, key).Result()
 		if err != nil {
-			c.Next()
+			RateLimit(fallback)(c)
 			return
 		}
 

@@ -80,22 +80,14 @@
 import { computed, onMounted, onBeforeUnmount, ref } from "vue";
 import { onBeforeRouteLeave } from "vue-router";
 import { getModerationSettings, updateModerationSettings } from "../api/dashboard";
+import { useFlashMessage } from "../composables/useFlashMessage";
 
 const banThreshold = ref(0);
 const originalThreshold = ref(0);
 const saving = ref(false);
-const message = ref("");
+const { flash: message, say } = useFlashMessage();
 
 const isDirty = computed(() => banThreshold.value !== originalThreshold.value);
-
-function say(text) {
-  message.value = text;
-  window.setTimeout(() => {
-    if (message.value === text) {
-      message.value = "";
-    }
-  }, 2200);
-}
 
 async function loadSettings() {
   try {

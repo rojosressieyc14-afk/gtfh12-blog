@@ -40,6 +40,7 @@ import { useRoute } from "vue-router";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { getPublicNote } from "../api/knowledgeBase";
+import { formatDate } from "../utils/date";
 
 const route = useRoute();
 const note = ref(null);
@@ -49,10 +50,6 @@ const renderedContent = computed(() => {
   if (!note.value?.content) return "";
   return DOMPurify.sanitize(marked.parse(note.value.content));
 });
-
-function formatDate(value) {
-  return new Date(value).toLocaleString("zh-CN");
-}
 
 onMounted(async () => {
   try {

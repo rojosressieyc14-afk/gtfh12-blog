@@ -139,6 +139,8 @@ import {
   getPendingReviews,
   getPendingProjectReviews
 } from "../../api/dashboard";
+import { formatDate } from "../../utils/date";
+import { useFlashMessage } from "../../composables/useFlashMessage";
 
 const emit = defineEmits(["flash", "open-article-preview", "data-changed"]);
 
@@ -165,13 +167,7 @@ const articleCategoryDrafts = ref({});
 const articleTagDrafts = ref({});
 const articleQuickTaxonomySaving = ref({});
 
-function say(message) {
-  emit("flash", message);
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleString("zh-CN") : "暂无时间";
-}
+const { flash, say } = useFlashMessage();
 
 function statusLabel(status) {
   return {

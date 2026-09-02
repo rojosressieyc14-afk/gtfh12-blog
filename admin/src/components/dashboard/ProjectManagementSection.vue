@@ -85,6 +85,8 @@ import {
   getPendingReviews,
   getPendingProjectReviews
 } from "../../api/dashboard";
+import { formatDate } from "../../utils/date";
+import { useFlashMessage } from "../../composables/useFlashMessage";
 
 const emit = defineEmits(["flash", "open-project-preview", "data-changed"]);
 
@@ -96,13 +98,7 @@ const projectTotal = ref(0);
 const pageSize = 6;
 const projectMetaSaving = ref({});
 
-function say(message) {
-  emit("flash", message);
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleString("zh-CN") : "暂无时间";
-}
+const { flash, say } = useFlashMessage();
 
 function projectStatusLabel(status) {
   return {

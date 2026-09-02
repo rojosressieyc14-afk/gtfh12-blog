@@ -47,20 +47,15 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { deleteAdminUpload, getAdminUploads } from "../api/dashboard";
+import { formatDate } from "../utils/date";
+import { useFlashMessage } from "../composables/useFlashMessage";
 
 const items = ref([]);
-const flash = ref("");
+const { flash, say } = useFlashMessage();
 const keyword = ref("");
 const filteredItems = computed(() =>
   items.value.filter((item) => item.name.toLowerCase().includes(keyword.value.toLowerCase()))
 );
-
-function say(message) {
-  flash.value = message;
-  window.setTimeout(() => {
-    if (flash.value === message) flash.value = "";
-  }, 2200);
-}
 
 async function loadUploads() {
   try {
@@ -104,10 +99,6 @@ function formatSize(size) {
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleString("zh-CN") : "暂无时间";
 }
 
 onMounted(loadUploads);

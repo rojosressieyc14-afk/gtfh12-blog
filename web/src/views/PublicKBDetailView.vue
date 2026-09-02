@@ -110,6 +110,7 @@ import {
 } from "../api/knowledgeBase";
 import DocTree from "../components/DocTree.vue";
 import DocToc from "../components/DocToc.vue";
+import { formatDate } from "../utils/date";
 
 const route = useRoute();
 const router = useRouter();
@@ -195,10 +196,6 @@ function onSelectDoc(item) {
   if (!isFolder) {
     router.push({ name: 'kb-read', params: { id: route.params.id }, query: { doc: item.id } });
   }
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleString("zh-CN");
 }
 
 function onDocContentClick(e) {

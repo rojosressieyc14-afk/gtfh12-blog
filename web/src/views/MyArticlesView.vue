@@ -62,6 +62,7 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { deleteArticle, getArticleStats, listMyArticles } from "../api/article";
+import { formatDate } from "../utils/date";
 
 const articles = ref([]);
 const page = ref(1);
@@ -184,10 +185,6 @@ async function handleDelete(id, title) {
 async function goToPage(nextPage) {
   page.value = nextPage;
   await loadMine();
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleString("zh-CN");
 }
 
 onMounted(loadMine);

@@ -186,6 +186,7 @@ import { useRoute } from "vue-router";
 import { createComment, getArticle, listComments, toggleFavorite, toggleLike } from "../api/article";
 import { useUserStore } from "../stores/user";
 import { toAssetUrl } from "../utils/asset";
+import { formatDate } from "../utils/date";
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -279,9 +280,11 @@ async function loadComments() {
 
 async function submitComment() {
   if (!commentText.value) return;
-  await createComment(route.params.id, { content: commentText.value });
-  commentText.value = "";
-  await loadComments();
+  try {
+    await createComment(route.params.id, { content: commentText.value });
+    commentText.value = "";
+    await loadComments();
+  } catch { /* handled by axios interceptor */ }
 }
 
 function shareTwitter() {
@@ -328,22 +331,28 @@ function shareWeChat() {
 
 async function submitReply(parentId) {
   if (!replyText.value) return;
-  await createComment(route.params.id, { content: replyText.value, parentId });
-  replyText.value = "";
-  replyTo.value = null;
-  await loadComments();
+  try {
+    await createComment(route.params.id, { content: replyText.value, parentId });
+    replyText.value = "";
+    replyTo.value = null;
+    await loadComments();
+  } catch { /* handled by axios interceptor */ }
 }
 
 async function onLike() {
   if (!userStore.isLoggedIn) return;
-  const { data } = await toggleLike(route.params.id);
-  article.value = { ...article.value, ...data.item };
+  try {
+    const { data } = await toggleLike(route.params.id);
+    article.value = { ...article.value, ...data.item };
+  } catch { /* handled by axios interceptor */ }
 }
 
 async function onFavorite() {
   if (!userStore.isLoggedIn) return;
-  const { data } = await toggleFavorite(route.params.id);
-  article.value = { ...article.value, ...data.item };
+  try {
+    const { data } = await toggleFavorite(route.params.id);
+    article.value = { ...article.value, ...data.item };
+  } catch { /* handled by axios interceptor */ }
 }
 
 function scrollToHeading(id) {
@@ -369,10 +378,6 @@ async function copyShareUrl() {
 
 function onEsc(e) {
   if (e.key === "Escape" && showShareCard.value) showShareCard.value = false;
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleString("zh-CN");
 }
 
 onMounted(async () => {

@@ -116,6 +116,7 @@ import {
   updateCategory,
   updateTag
 } from "../../api/meta";
+import { useFlashMessage } from "../../composables/useFlashMessage";
 
 const emit = defineEmits(["flash", "data-changed"]);
 
@@ -156,9 +157,7 @@ function syncDrafts() {
 
 watch(() => [props.categories, props.tags], syncDrafts, { immediate: true });
 
-function say(message) {
-  emit("flash", message);
-}
+const { flash, say } = useFlashMessage();
 
 function canRenameCategory(item) {
   const nextName = categoryDrafts.value[item.id]?.trim();

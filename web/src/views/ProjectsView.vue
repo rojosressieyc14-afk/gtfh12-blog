@@ -171,6 +171,7 @@ import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { listProjects } from "../api/project";
 import { toAssetUrl } from "../utils/asset";
+import { formatDate } from "../utils/date";
 
 const route = useRoute();
 const router = useRouter();
@@ -290,10 +291,6 @@ function toggleAllProjects() {
       allProjectsPanel.value?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleDateString("zh-CN");
 }
 
 watch(

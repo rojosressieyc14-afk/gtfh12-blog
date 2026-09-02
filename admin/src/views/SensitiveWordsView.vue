@@ -97,6 +97,8 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { createSensitiveWord, deleteSensitiveWord, getSensitiveWords } from "../api/dashboard";
+import { formatDate } from "../utils/date";
+import { useFlashMessage } from "../composables/useFlashMessage";
 
 const items = ref([]);
 const total = ref(0);
@@ -104,7 +106,7 @@ const page = ref(1);
 const pageSize = 12;
 const keyword = ref("");
 const submitting = ref(false);
-const message = ref("");
+const { flash: message, say } = useFlashMessage();
 const form = reactive({
   word: "",
   category: "custom",
@@ -112,15 +114,6 @@ const form = reactive({
 });
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
-
-function say(text) {
-  message.value = text;
-  window.setTimeout(() => {
-    if (message.value === text) {
-      message.value = "";
-    }
-  }, 2200);
-}
 
 async function loadWords() {
   const { data } = await getSensitiveWords({ page: page.value, pageSize, keyword: keyword.value });
@@ -170,10 +163,6 @@ async function removeWord(item) {
   } catch (error) {
     say(error?.response?.data?.message || error?.message || "删除违禁词失败。");
   }
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleString("zh-CN") : "暂无时间";
 }
 
 onMounted(loadWords);

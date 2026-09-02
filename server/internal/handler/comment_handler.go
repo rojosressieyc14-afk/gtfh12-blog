@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 
 	"blog/server/internal/middleware"
 	"blog/server/internal/service"
@@ -18,7 +17,10 @@ func NewCommentHandler(commentService *service.CommentService) *CommentHandler {
 }
 
 func (h *CommentHandler) List(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	items, err := h.commentService.List(uint(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "加载评论失败"})
@@ -28,7 +30,10 @@ func (h *CommentHandler) List(c *gin.Context) {
 }
 
 func (h *CommentHandler) Create(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	var payload service.CommentPayload
 	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})

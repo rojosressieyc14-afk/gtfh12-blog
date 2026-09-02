@@ -128,7 +128,10 @@ func (h *ArticleHandler) siteURL(c *gin.Context) string {
 }
 
 func (h *ArticleHandler) Detail(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 
 	var viewerID uint
 	if authUser := middleware.GetAuthUser(c); authUser != nil {
@@ -176,7 +179,10 @@ func (h *ArticleHandler) Create(c *gin.Context) {
 }
 
 func (h *ArticleHandler) Update(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 
 	var payload service.ArticlePayload
 	if err := safeBindJSON(c, &payload); err != nil {
@@ -201,7 +207,10 @@ func (h *ArticleHandler) Update(c *gin.Context) {
 }
 
 func (h *ArticleHandler) Delete(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	authUser := middleware.GetAuthUser(c)
 
 	if err := h.articleService.Delete(uint(id), authUser.ID, authUser.Role); err != nil {
@@ -219,7 +228,10 @@ func (h *ArticleHandler) Delete(c *gin.Context) {
 }
 
 func (h *ArticleHandler) Submit(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	authUser := middleware.GetAuthUser(c)
 
 	article, err := h.articleService.Submit(uint(id), authUser.ID, authUser.Role)
@@ -271,7 +283,10 @@ func (h *ArticleHandler) Favorited(c *gin.Context) {
 }
 
 func (h *ArticleHandler) ToggleLike(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	authUser := middleware.GetAuthUser(c)
 
 	item, err := h.articleService.ToggleLike(uint(id), authUser.ID)
@@ -283,7 +298,10 @@ func (h *ArticleHandler) ToggleLike(c *gin.Context) {
 }
 
 func (h *ArticleHandler) ToggleFavorite(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	authUser := middleware.GetAuthUser(c)
 
 	item, err := h.articleService.ToggleFavorite(uint(id), authUser.ID)
@@ -295,7 +313,10 @@ func (h *ArticleHandler) ToggleFavorite(c *gin.Context) {
 }
 
 func (h *ArticleHandler) Stats(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	authUser := middleware.GetAuthUser(c)
 	items, err := h.articleService.GetArticleStats(uint(id), authUser.ID)
 	if err != nil {

@@ -141,6 +141,8 @@ import {
   bulkRejectAdminArticles,
   bulkApproveAdminArticles
 } from "../../api/dashboard";
+import { formatDate } from "../../utils/date";
+import { useFlashMessage } from "../../composables/useFlashMessage";
 
 const emit = defineEmits(["flash", "open-article-preview", "open-ai-review", "data-changed"]);
 
@@ -163,13 +165,7 @@ const reviewReasonPresets = [
   "存在明显排版或错别字问题，请修订后再提交。"
 ];
 
-function say(message) {
-  emit("flash", message);
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleString("zh-CN") : "暂无时间";
-}
+const { flash, say } = useFlashMessage();
 
 const filteredReviews = computed(() => {
   const keyword = articleReviewKeyword.value.trim().toLowerCase();

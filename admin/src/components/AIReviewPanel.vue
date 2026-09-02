@@ -101,6 +101,7 @@
 <script setup>
 import { ref, watch } from "vue";
 import { getAIReviewContent, getAIReviewResult, saveAIReviewResult } from "../api/dashboard";
+import { formatDate } from "../utils/date";
 
 const props = defineProps({
   visible: Boolean,
@@ -210,11 +211,7 @@ function riskLevelLabel(level) {
   return { low: "低风险", mid: "中风险", high: "高风险" }[level] || level;
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
+
 </script>
 
 <style scoped>

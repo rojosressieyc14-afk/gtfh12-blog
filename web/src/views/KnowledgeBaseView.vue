@@ -65,6 +65,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { createKnowledgeBase, deleteKnowledgeBase, listKnowledgeBases } from "../api/knowledgeBase";
+import { formatDate } from "../utils/date";
 
 const kbs = ref([]);
 const showCreate = ref(false);
@@ -107,10 +108,6 @@ async function handleDelete(kb) {
   } catch (e) {
     errorMessage.value = "删除失败：" + (e?.response?.data?.message || e.message);
   }
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleString("zh-CN");
 }
 
 onMounted(load);

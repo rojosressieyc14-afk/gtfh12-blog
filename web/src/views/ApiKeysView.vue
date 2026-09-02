@@ -69,6 +69,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { createApiKey, deleteApiKey, listApiKeys } from "../api/apiKey";
+import { formatDate } from "../utils/date";
 
 const keys = ref([]);
 const showAdd = ref(false);
@@ -119,10 +120,6 @@ async function handleDelete(key) {
   } catch (e) {
     errorMessage.value = "删除失败：" + (e?.response?.data?.message || e.message);
   }
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleString("zh-CN");
 }
 
 onMounted(load);

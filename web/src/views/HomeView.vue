@@ -105,18 +105,24 @@ const featuredArticles = computed(() => {
 });
 
 async function fetchArticles() {
-  const { data } = await listArticles({ page: 1, pageSize: 9 });
-  articles.value = data.items || [];
+  try {
+    const { data } = await listArticles({ page: 1, pageSize: 9 });
+    articles.value = data.items || [];
+  } catch { /* handled by axios interceptor */ }
 }
 
 async function fetchTrending() {
-  const { data } = await listTrendingArticles();
-  trendingArticles.value = data.items || [];
+  try {
+    const { data } = await listTrendingArticles();
+    trendingArticles.value = data.items || [];
+  } catch { /* handled by axios interceptor */ }
 }
 
 async function fetchProjects() {
-  const { data } = await listProjects({ page: 1, pageSize: 3, featured: true });
-  featuredProjects.value = data.items || [];
+  try {
+    const { data } = await listProjects({ page: 1, pageSize: 3, featured: true });
+    featuredProjects.value = data.items || [];
+  } catch { /* handled by axios interceptor */ }
 }
 
 async function fetchOwnerProfile(id) {

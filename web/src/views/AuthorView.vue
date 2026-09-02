@@ -208,6 +208,7 @@ import { useRoute } from "vue-router";
 import { getAuthorProfile } from "../api/profile";
 import ArticleCard from "../components/ArticleCard.vue";
 import { toAssetUrl } from "../utils/asset";
+import { formatDate } from "../utils/date";
 
 const route = useRoute();
 const author = ref(null);
@@ -323,10 +324,6 @@ async function loadAuthor() {
   articles.value = data.articles || [];
   projects.value = data.projects || [];
   stats.value = data.stats || {};
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleDateString("zh-CN");
 }
 
 watch(() => route.params.id, loadAuthor);

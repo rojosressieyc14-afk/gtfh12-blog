@@ -112,6 +112,7 @@ import DOMPurify from "dompurify";
 import { getKnowledgeBase, getDocumentTree, listDocuments, deleteDocument, searchDocuments, getBacklinks, moveDocument } from "../api/knowledgeBase";
 import DocTree from "../components/DocTree.vue";
 import DocToc from "../components/DocToc.vue";
+import { formatDate } from "../utils/date";
 
 const route = useRoute();
 const router = useRouter();
@@ -278,10 +279,6 @@ async function handleMoveDoc({ docId, targetId }) {
   } catch (e) {
     // silent
   }
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleString("zh-CN");
 }
 
 async function handleDeleteDoc(doc) {

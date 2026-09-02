@@ -63,6 +63,8 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { getAdminLogs } from "../api/dashboard";
+import { formatDate } from "../utils/date";
+import { useFlashMessage } from "../composables/useFlashMessage";
 
 const items = ref([]);
 const total = ref(0);
@@ -72,6 +74,7 @@ const keyword = ref("");
 const action = ref("");
 const dateFrom = ref("");
 const dateTo = ref("");
+const { flash, say } = useFlashMessage();
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
 const actionOptions = [
@@ -143,10 +146,6 @@ function targetLabel(type, id) {
     system_setting: "系统设置"
   };
   return `${map[type] || type} #${id || 0}`;
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleString("zh-CN") : "暂无时间";
 }
 
 function resetFilters() {

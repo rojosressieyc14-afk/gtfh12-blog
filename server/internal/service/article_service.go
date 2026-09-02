@@ -14,18 +14,18 @@ import (
 )
 
 type ArticlePayload struct {
-	Title      string   `json:"title"`
-	Summary    string   `json:"summary"`
-	Content    string   `json:"content"`
-	CoverImage string   `json:"coverImage"`
+	Title      string   `json:"title" binding:"required,max=200"`
+	Summary    string   `json:"summary" binding:"max=500"`
+	Content    string   `json:"content" binding:"required,max=100000"`
+	CoverImage string   `json:"coverImage" binding:"max=500"`
 	CategoryID *uint    `json:"categoryId"`
-	Tags       []string `json:"tags"`
+	Tags       []string `json:"tags" binding:"dive,max=50"`
 	IsPrivate  bool     `json:"isPrivate"`
 }
 
 type ReviewPayload struct {
-	Action string `json:"action"`
-	Reason string `json:"reason"`
+	Action string `json:"action" binding:"required,oneof=approve reject"`
+	Reason string `json:"reason" binding:"max=500"`
 }
 
 type ReactionSummary struct {
@@ -489,6 +489,9 @@ func (s *ArticleService) GetArticleStats(articleID, userID uint) ([]DailyStatsIt
 }
 
 func (s *ArticleService) Review(articleID, reviewerID uint, payload ReviewPayload) (*model.Article, error) {
+	if payload.Action != "approve" && payload.Action != "reject" {
+		return nil, errors.New("无效的操作类型")
+	}
 	var article model.Article
 	if err := s.db.Preload("Tags").First(&article, articleID).Error; err != nil {
 		return nil, err

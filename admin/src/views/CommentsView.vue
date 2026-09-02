@@ -76,22 +76,17 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { deleteAdminComment, getAdminComments } from "../api/dashboard";
+import { formatDate } from "../utils/date";
+import { useFlashMessage } from "../composables/useFlashMessage";
 
 const items = ref([]);
 const total = ref(0);
 const page = ref(1);
 const pageSize = 10;
 const keyword = ref("");
-const flash = ref("");
+const { flash, say } = useFlashMessage();
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
-
-function say(message) {
-  flash.value = message;
-  window.setTimeout(() => {
-    if (flash.value === message) flash.value = "";
-  }, 2200);
-}
 
 async function loadComments() {
   const { data } = await getAdminComments({ page: page.value, pageSize, keyword: keyword.value });
@@ -133,10 +128,6 @@ async function removeReply(id) {
 function resetFilters() {
   keyword.value = "";
   changePage(1);
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleString("zh-CN") : "暂无时间";
 }
 
 onMounted(() => {

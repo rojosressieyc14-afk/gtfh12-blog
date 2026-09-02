@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 
 	"blog/server/internal/middleware"
 	"blog/server/internal/service"
@@ -35,7 +34,10 @@ func (h *NotificationHandler) List(c *gin.Context) {
 
 func (h *NotificationHandler) MarkRead(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	if err := h.notificationService.MarkRead(authUser.ID, uint(id)); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
 		return

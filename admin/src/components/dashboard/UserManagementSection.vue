@@ -53,6 +53,7 @@
 <script setup>
 import { computed, ref } from "vue";
 import { getUsers, updateUserRole, updateUserStatus, deleteUser } from "../../api/dashboard";
+import { useFlashMessage } from "../../composables/useFlashMessage";
 
 const emit = defineEmits(["flash"]);
 
@@ -63,9 +64,7 @@ const userPage = ref(1);
 const userTotal = ref(0);
 const pageSize = 6;
 
-function say(message) {
-  emit("flash", message);
-}
+const { flash, say } = useFlashMessage();
 
 function roleLabel(role) {
   return role === "admin" ? "管理员" : "普通用户";

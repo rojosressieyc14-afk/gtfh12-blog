@@ -58,6 +58,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { listNotifications, markAllNotificationsRead, markNotificationRead } from "../api/notification";
+import { formatDate } from "../utils/date";
 
 const router = useRouter();
 const items = ref([]);
@@ -129,10 +130,6 @@ function notificationTypeClass(type) {
     success: type === "article_comment" || type === "comment_reply",
     reject: type === "moderation"
   };
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleString("zh-CN");
 }
 
 onMounted(loadData);

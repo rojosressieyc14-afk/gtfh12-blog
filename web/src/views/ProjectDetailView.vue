@@ -235,6 +235,7 @@ import DOMPurify from "dompurify";
 import { useRoute } from "vue-router";
 import { getProject } from "../api/project";
 import { toAssetUrl } from "../utils/asset";
+import { formatDate } from "../utils/date";
 
 const route = useRoute();
 const project = ref(null);
@@ -318,10 +319,6 @@ const scoreRingStyle = computed(() => ({
 async function loadDetail() {
   const { data } = await getProject(route.params.id);
   project.value = data.item;
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleDateString("zh-CN");
 }
 
 function shareTwitter() {

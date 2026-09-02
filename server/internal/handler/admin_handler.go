@@ -51,7 +51,10 @@ func (h *AdminHandler) PendingProjects(c *gin.Context) {
 }
 
 func (h *AdminHandler) ArticleDetail(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	item, err := h.adminService.GetArticleDetail(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "文章不存在"})
@@ -61,7 +64,10 @@ func (h *AdminHandler) ArticleDetail(c *gin.Context) {
 }
 
 func (h *AdminHandler) ProjectDetail(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	item, err := h.adminService.GetProjectDetail(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "项目不存在"})
@@ -71,7 +77,10 @@ func (h *AdminHandler) ProjectDetail(c *gin.Context) {
 }
 
 func (h *AdminHandler) ReviewArticle(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	var payload service.ReviewPayload
 	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -236,7 +245,10 @@ func (h *AdminHandler) DeleteUpload(c *gin.Context) {
 }
 
 func (h *AdminHandler) UpdateUserRole(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	var payload struct {
 		Role string `json:"role"`
 	}
@@ -257,7 +269,10 @@ func (h *AdminHandler) UpdateUserRole(c *gin.Context) {
 }
 
 func (h *AdminHandler) UpdateUserStatus(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	var payload struct {
 		Status string `json:"status"`
 	}
@@ -278,7 +293,10 @@ func (h *AdminHandler) UpdateUserStatus(c *gin.Context) {
 }
 
 func (h *AdminHandler) DeleteUser(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	if err := h.adminService.DeleteUser(uint(id)); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -290,7 +308,10 @@ func (h *AdminHandler) DeleteUser(c *gin.Context) {
 }
 
 func (h *AdminHandler) DeleteArticle(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	if err := h.adminService.DeleteArticle(uint(id)); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -302,7 +323,10 @@ func (h *AdminHandler) DeleteArticle(c *gin.Context) {
 }
 
 func (h *AdminHandler) UpdateArticleTaxonomy(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	var payload service.ArticleTaxonomyPayload
 	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -437,7 +461,10 @@ func (h *AdminHandler) BulkApproveArticles(c *gin.Context) {
 }
 
 func (h *AdminHandler) DeleteProject(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	if err := h.adminService.DeleteProject(uint(id)); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -449,7 +476,10 @@ func (h *AdminHandler) DeleteProject(c *gin.Context) {
 }
 
 func (h *AdminHandler) ForcePublishArticle(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	item, err := h.adminService.ForcePublishArticle(uint(id))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -462,7 +492,10 @@ func (h *AdminHandler) ForcePublishArticle(c *gin.Context) {
 }
 
 func (h *AdminHandler) ForcePublishProject(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	item, err := h.adminService.ForcePublishProject(uint(id))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -475,7 +508,10 @@ func (h *AdminHandler) ForcePublishProject(c *gin.Context) {
 }
 
 func (h *AdminHandler) ReviewProject(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	var payload service.ProjectReviewPayload
 	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -537,7 +573,10 @@ func (h *AdminHandler) BulkReviewProjects(c *gin.Context) {
 }
 
 func (h *AdminHandler) UpdateProjectMeta(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	var payload service.ProjectMetaPayload
 	if err := safeBindJSON(c, &payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -556,7 +595,10 @@ func (h *AdminHandler) UpdateProjectMeta(c *gin.Context) {
 }
 
 func (h *AdminHandler) DeleteComment(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	if err := h.adminService.DeleteComment(uint(id)); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -599,7 +641,10 @@ func (h *AdminHandler) CreateSensitiveWord(c *gin.Context) {
 }
 
 func (h *AdminHandler) DeleteSensitiveWord(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	if err := h.adminService.DeleteSensitiveWord(uint(id)); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return

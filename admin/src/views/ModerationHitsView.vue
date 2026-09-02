@@ -102,6 +102,8 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { getModerationHits, getModerationSettings, updateModerationSettings } from "../api/dashboard";
+import { formatDate } from "../utils/date";
+import { useFlashMessage } from "../composables/useFlashMessage";
 
 const items = ref([]);
 const total = ref(0);
@@ -111,6 +113,7 @@ const keyword = ref("");
 const scene = ref("");
 const autoBannedOnly = ref(false);
 const banThreshold = ref(5);
+const { flash, say } = useFlashMessage();
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
 
@@ -158,10 +161,6 @@ async function changePage(nextPage) {
   } catch (error) {
     say(error?.response?.data?.message || error?.message || "加载风控命中记录失败。");
   }
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleString("zh-CN") : "暂无时间";
 }
 
 onMounted(async () => {

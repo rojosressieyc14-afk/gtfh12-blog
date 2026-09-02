@@ -41,7 +41,10 @@ func (h *ProjectHandler) ListPublished(c *gin.Context) {
 }
 
 func (h *ProjectHandler) Detail(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 
 	var viewerID uint
 	var role string
@@ -77,7 +80,10 @@ func (h *ProjectHandler) Mine(c *gin.Context) {
 }
 
 func (h *ProjectHandler) MineDetail(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	authUser := middleware.GetAuthUser(c)
 
 	item, err := h.projectService.GetByID(uint(id), authUser.ID, authUser.Role)
@@ -111,7 +117,10 @@ func (h *ProjectHandler) Create(c *gin.Context) {
 }
 
 func (h *ProjectHandler) Update(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 
 	var payload service.ProjectPayload
 	if err := safeBindJSON(c, &payload); err != nil {
@@ -134,7 +143,10 @@ func (h *ProjectHandler) Update(c *gin.Context) {
 }
 
 func (h *ProjectHandler) Delete(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	authUser := middleware.GetAuthUser(c)
 
 	if err := h.projectService.Delete(uint(id), authUser.ID, authUser.Role); err != nil {
@@ -152,7 +164,10 @@ func (h *ProjectHandler) Delete(c *gin.Context) {
 }
 
 func (h *ProjectHandler) Submit(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
 	authUser := middleware.GetAuthUser(c)
 
 	item, err := h.projectService.Submit(uint(id), authUser.ID, authUser.Role)

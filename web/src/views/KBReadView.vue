@@ -65,6 +65,7 @@ import { useUserStore } from "../stores/user";
 import { getKnowledgeBase, getDocumentTree, listDocuments, listPublicDocuments } from "../api/knowledgeBase";
 import DocTree from "../components/DocTree.vue";
 import DocToc from "../components/DocToc.vue";
+import { formatDate } from "../utils/date";
 
 const route = useRoute();
 const router = useRouter();
@@ -143,10 +144,6 @@ function setupTocObserver() {
       if (el) tocObserver.observe(el);
     });
   });
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleString("zh-CN");
 }
 
 async function load() {

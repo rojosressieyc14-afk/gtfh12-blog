@@ -26,6 +26,7 @@
 import { computed } from "vue";
 import DOMPurify from "dompurify";
 import { toAssetUrl } from "../utils/asset";
+import { formatDate } from "../utils/date";
 
 const props = defineProps({
   item: { type: Object, required: true },
@@ -51,9 +52,7 @@ const statusLabel = computed(() => {
 
 const coverUrl = computed(() => toAssetUrl(props.item.coverImage));
 
-function formatDate(value) {
-  return new Date(value).toLocaleString("zh-CN");
-}
+
 </script>
 
 <style scoped>

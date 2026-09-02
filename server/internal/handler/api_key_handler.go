@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 
 	"blog/server/internal/middleware"
 	"blog/server/internal/service"
@@ -49,9 +48,8 @@ func (h *ApiKeyHandler) Create(c *gin.Context) {
 
 func (h *ApiKeyHandler) Delete(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	id, _ := strconv.Atoi(c.Param("id"))
-	if id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	id, ok := parseID(c, "id")
+	if !ok {
 		return
 	}
 

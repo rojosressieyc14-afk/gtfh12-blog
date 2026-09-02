@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 
 	"blog/server/internal/middleware"
 	"blog/server/internal/service"
@@ -57,9 +56,8 @@ func (h *KnowledgeBaseHandler) ListPublicKBs(c *gin.Context) {
 }
 
 func (h *KnowledgeBaseHandler) ListPublicDocuments(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	if id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	id, ok := parseID(c, "id")
+	if !ok {
 		return
 	}
 	docs, err := h.svc.ListPublicDocuments(uint(id))
@@ -72,9 +70,8 @@ func (h *KnowledgeBaseHandler) ListPublicDocuments(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) Get(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	id, _ := strconv.Atoi(c.Param("id"))
-	if id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	id, ok := parseID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -88,9 +85,8 @@ func (h *KnowledgeBaseHandler) Get(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) Delete(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	id, _ := strconv.Atoi(c.Param("id"))
-	if id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	id, ok := parseID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -103,9 +99,8 @@ func (h *KnowledgeBaseHandler) Delete(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) AddDocument(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	id, _ := strconv.Atoi(c.Param("id"))
-	if id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	id, ok := parseID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -139,10 +134,12 @@ func (h *KnowledgeBaseHandler) AddDocument(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) UpdateDocument(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	kbID, _ := strconv.Atoi(c.Param("id"))
-	docID, _ := strconv.Atoi(c.Param("docId"))
-	if kbID <= 0 || docID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	kbID, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
+	docID, ok := parseID(c, "docId")
+	if !ok {
 		return
 	}
 
@@ -176,9 +173,8 @@ func (h *KnowledgeBaseHandler) UpdateDocument(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) ListDocuments(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	id, _ := strconv.Atoi(c.Param("id"))
-	if id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	id, ok := parseID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -192,10 +188,12 @@ func (h *KnowledgeBaseHandler) ListDocuments(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) DeleteDocument(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	kbID, _ := strconv.Atoi(c.Param("id"))
-	docID, _ := strconv.Atoi(c.Param("docId"))
-	if kbID <= 0 || docID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	kbID, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
+	docID, ok := parseID(c, "docId")
+	if !ok {
 		return
 	}
 
@@ -208,9 +206,8 @@ func (h *KnowledgeBaseHandler) DeleteDocument(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) Query(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	id, _ := strconv.Atoi(c.Param("id"))
-	if id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	id, ok := parseID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -232,9 +229,8 @@ func (h *KnowledgeBaseHandler) Query(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) GetDocumentTree(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	id, _ := strconv.Atoi(c.Param("id"))
-	if id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	id, ok := parseID(c, "id")
+	if !ok {
 		return
 	}
 	tree, err := h.svc.GetDocumentTree(uint(id), authUser.ID)
@@ -247,10 +243,12 @@ func (h *KnowledgeBaseHandler) GetDocumentTree(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) MoveDocument(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	kbID, _ := strconv.Atoi(c.Param("id"))
-	docID, _ := strconv.Atoi(c.Param("docId"))
-	if kbID <= 0 || docID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	kbID, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
+	docID, ok := parseID(c, "docId")
+	if !ok {
 		return
 	}
 	var opts service.MoveDocumentOpts
@@ -266,9 +264,8 @@ func (h *KnowledgeBaseHandler) MoveDocument(c *gin.Context) {
 }
 
 func (h *KnowledgeBaseHandler) GetPublicNote(c *gin.Context) {
-	noteID, _ := strconv.Atoi(c.Param("id"))
-	if noteID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	noteID, ok := parseID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -282,9 +279,8 @@ func (h *KnowledgeBaseHandler) GetPublicNote(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) Search(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	id, _ := strconv.Atoi(c.Param("id"))
-	if id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	id, ok := parseID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -304,10 +300,12 @@ func (h *KnowledgeBaseHandler) Search(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) Backlinks(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	kbID, _ := strconv.Atoi(c.Param("id"))
-	docID, _ := strconv.Atoi(c.Param("docId"))
-	if kbID <= 0 || docID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	kbID, ok := parseID(c, "id")
+	if !ok {
+		return
+	}
+	docID, ok := parseID(c, "docId")
+	if !ok {
 		return
 	}
 
@@ -321,9 +319,8 @@ func (h *KnowledgeBaseHandler) Backlinks(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) Graph(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	kbID, _ := strconv.Atoi(c.Param("id"))
-	if kbID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	kbID, ok := parseID(c, "id")
+	if !ok {
 		return
 	}
 
@@ -337,9 +334,8 @@ func (h *KnowledgeBaseHandler) Graph(c *gin.Context) {
 
 func (h *KnowledgeBaseHandler) ListTags(c *gin.Context) {
 	authUser := middleware.GetAuthUser(c)
-	kbID, _ := strconv.Atoi(c.Param("id"))
-	if kbID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "无效的 ID"})
+	kbID, ok := parseID(c, "id")
+	if !ok {
 		return
 	}
 

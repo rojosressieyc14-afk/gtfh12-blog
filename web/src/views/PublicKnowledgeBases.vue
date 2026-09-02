@@ -90,6 +90,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useUserStore } from "../stores/user";
 import { listPublicKBs, listKnowledgeBases } from "../api/knowledgeBase";
+import { formatDate } from "../utils/date";
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -98,10 +99,6 @@ const publicKbs = ref([]);
 const loading = ref(true);
 
 const totalDocs = computed(() => publicKbs.value.reduce((sum, kb) => sum + (kb.publicCount || 0), 0));
-
-function formatDate(value) {
-  return new Date(value).toLocaleDateString("zh-CN");
-}
 
 async function loadData() {
   loading.value = true;
