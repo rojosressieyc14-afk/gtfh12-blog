@@ -46,6 +46,14 @@ func createTestUser(t *testing.T, db *gorm.DB, role string) model.User {
 	return user
 }
 
+func publishArticle(t *testing.T, db *gorm.DB, articleID uint) {
+	t.Helper()
+	if err := db.Model(&model.Article{}).Where("id = ?", articleID).
+		Update("status", model.ArticlePublished).Error; err != nil {
+		t.Fatalf("publish article %d: %v", articleID, err)
+	}
+}
+
 func TestArticleReviewApproveFlow(t *testing.T) {
 	db := newTestDB(t)
 	author := createTestUser(t, db, model.RoleUser)
@@ -133,6 +141,7 @@ func TestCommentCreatesNotificationsForAuthorAndParent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create article: %v", err)
 	}
+	publishArticle(t, db, article.ID)
 
 	parent, err := commentService.Create(article.ID, replyTarget.ID, CommentPayload{
 		Content: "first comment",
@@ -564,6 +573,7 @@ func TestAdminUpdateArticleTaxonomyReassignsCategoryAndTags(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create article: %v", err)
 	}
+	publishArticle(t, db, article.ID)
 
 	var goTag model.Tag
 	if err := db.Where("name = ?", "Go").First(&goTag).Error; err != nil {
@@ -673,6 +683,7 @@ func TestAdminBulkUpdateArticleTaxonomyUpdatesMultipleArticles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create first article: %v", err)
 	}
+	publishArticle(t, db, first.ID)
 	second, err := articleService.Create(author.ID, model.RoleUser, ArticlePayload{
 		Title:   "Bulk second",
 		Summary: "summary",
@@ -767,6 +778,7 @@ func TestAdminBulkPublishArticlesPublishesOnlyNonPublishedItems(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create published article: %v", err)
 	}
+	publishArticle(t, db, published.ID)
 
 	updated, err := adminService.BulkPublishArticles(BulkArticleIDsPayload{
 		ArticleIDs: []uint{draft.ID, pending.ID, published.ID, pending.ID},
@@ -976,6 +988,11 @@ func TestAdminBulkRejectArticlesRejectsUnsafeStatuses(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("create published article: %v", err)
+	}
+	// Publish the article directly since Create always sets draft status
+	if err := db.Model(&model.Article{}).Where("id = ?", published.ID).
+		Update("status", model.ArticlePublished).Error; err != nil {
+		t.Fatalf("publish article: %v", err)
 	}
 	if _, err := articleService.Submit(pending.ID, author.ID, model.RoleUser); err != nil {
 		t.Fatalf("submit pending article: %v", err)
