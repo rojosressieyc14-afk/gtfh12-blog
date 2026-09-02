@@ -146,6 +146,13 @@
         >
           <span class="toolbar-icon">▦</span>
         </button>
+        <button
+          type="button"
+          title="插入 Wiki 链接 [[...]]"
+          @click="insertWikiLink"
+        >
+          <span class="toolbar-icon"> [[]] </span>
+        </button>
       </div>
 
       <input
@@ -264,6 +271,12 @@ function setLink() {
   }
   const safe = url.replace(/^(javascript|data|vbscript):/i, "#");
   editor.value.chain().focus().extendMarkRange("link").setLink({ href: safe }).run();
+}
+
+function insertWikiLink() {
+  const name = window.prompt("输入笔记名称（Wiki 链接目标）：");
+  if (!name) return;
+  editor.value.chain().focus().insertContent(`[[${name}]]`).run();
 }
 
 function triggerImageUpload() {
