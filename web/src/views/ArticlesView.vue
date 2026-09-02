@@ -95,7 +95,17 @@
         </div>
 
         <div class="article-grid article-grid--list">
-          <ArticleCard v-for="item in articles" :key="item.id" :item="item" :keyword="keyword" />
+          <template v-if="loading">
+            <div v-for="n in 6" :key="`skeleton-${n}`" class="article-card-skeleton">
+              <div class="skeleton-shine skeleton-cover" />
+              <div class="skeleton-shine skeleton-title" />
+              <div class="skeleton-shine skeleton-text" />
+              <div class="skeleton-shine skeleton-text skeleton-text--short" />
+            </div>
+          </template>
+          <template v-else>
+            <ArticleCard v-for="item in articles" :key="item.id" :item="item" :keyword="keyword" />
+          </template>
         </div>
 
         <div v-if="!articles.length" class="empty-panel">
@@ -136,6 +146,7 @@ const authorName = ref("");
 const page = ref(1);
 const pageSize = 9;
 const total = ref(0);
+const loading = ref(true);
 
 const showAll = ref(false);
 const allArticlesPanel = ref(null);
@@ -178,17 +189,22 @@ function buildQuery(nextPage = page.value) {
 }
 
 async function loadArticles() {
-  const { data } = await listArticles({
-    keyword: keyword.value,
-    page: page.value,
-    pageSize,
-    categoryId: categoryId.value,
-    tag: selectedTag.value,
-    authorId: authorId.value,
-    sort: sortBy.value
-  });
-  articles.value = data.items || [];
-  total.value = data.pagination?.total || 0;
+  loading.value = true;
+  try {
+    const { data } = await listArticles({
+      keyword: keyword.value,
+      page: page.value,
+      pageSize,
+      categoryId: categoryId.value,
+      tag: selectedTag.value,
+      authorId: authorId.value,
+      sort: sortBy.value
+    });
+    articles.value = data.items || [];
+    total.value = data.pagination?.total || 0;
+  } finally {
+    loading.value = false;
+  }
 }
 
 async function loadTrendingArticles() {
@@ -612,5 +628,46 @@ onMounted(async () => {
   .articles-hero__title {
     font-size: 1.4rem;
   }
+}
+
+.article-card-skeleton {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton-shine {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: 8px;
+}
+
+.skeleton-cover {
+  height: 140px;
+  border-radius: 14px;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 70%;
+}
+
+.skeleton-text {
+  height: 14px;
+  width: 100%;
+}
+
+.skeleton-text--short {
+  width: 45%;
 }
 </style>

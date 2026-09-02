@@ -77,7 +77,8 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref } from "vue";
+import { onBeforeRouteLeave } from "vue-router";
 import { getModerationSettings, updateModerationSettings } from "../api/dashboard";
 
 const banThreshold = ref(0);
@@ -125,7 +126,24 @@ async function saveSettings() {
   }
 }
 
-onMounted(loadSettings);
+function handleBeforeUnload(e) {
+  if (isDirty.value) {
+    e.preventDefault();
+  }
+}
+
+onMounted(() => {
+  loadSettings();
+  window.addEventListener("beforeunload", handleBeforeUnload);
+});
+
+onBeforeUnmount(() => window.removeEventListener("beforeunload", handleBeforeUnload));
+
+onBeforeRouteLeave(() => {
+  if (isDirty.value && !window.confirm("有未保存的更改，确认离开？")) {
+    return false;
+  }
+});
 </script>
 
 <style scoped>
