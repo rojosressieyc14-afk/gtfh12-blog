@@ -21,7 +21,8 @@ type User struct {
 	YearsLabel  string    `gorm:"size:80" json:"yearsLabel"`
 	Motto       string    `gorm:"size:255" json:"motto"`
 	Location    string    `gorm:"size:120" json:"location"`
-	Email       string    `gorm:"size:120" json:"email"`
+	Email         string    `gorm:"size:120" json:"email"`
+	EmailVerified bool      `gorm:"default:false" json:"emailVerified"`
 	ResumeURL   string    `gorm:"size:255" json:"resumeUrl"`
 	WebsiteURL  string    `gorm:"size:255" json:"websiteUrl"`
 	GithubURL   string    `gorm:"size:255" json:"githubUrl"`

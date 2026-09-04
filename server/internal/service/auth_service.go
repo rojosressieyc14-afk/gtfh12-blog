@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"blog/server/internal/config"
@@ -67,6 +68,94 @@ func (s *AuthService) Register(username, password string) (*model.User, string, 
 		Password: hash,
 		Role:     model.RoleUser,
 		Status:   model.UserActive,
+	}
+
+	if err := s.db.Create(&user).Error; err != nil {
+		return nil, "", err
+	}
+
+	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role, user.Status, utils.TokenTTLDefault)
+	return &user, token, err
+}
+
+func (s *AuthService) SendVerifyCode(email string) error {
+	email = strings.TrimSpace(email)
+	if email == "" {
+		return fmt.Errorf("邮箱不能为空")
+	}
+	if !strings.Contains(email, "@") || !strings.Contains(email, ".") {
+		return fmt.Errorf("邮箱格式不正确")
+	}
+
+	if !s.cfg.IsSMTPEnabled() {
+		return fmt.Errorf("邮件服务未配置，请联系管理员")
+	}
+
+	var exists int64
+	if err := s.db.Model(&model.User{}).Where("email = ?", email).Count(&exists).Error; err != nil {
+		return err
+	}
+	if exists > 0 {
+		return fmt.Errorf("该邮箱已被注册")
+	}
+
+	canSend, _ := utils.CanSendVerifyCode(email)
+	if !canSend {
+		return fmt.Errorf("发送过于频繁，请稍后再试")
+	}
+
+	code := utils.GenerateVerifyCode(email)
+
+	go func() {
+		err := utils.SendVerificationCode(email, code,
+			s.cfg.SMTPHost, s.cfg.SMTPPort,
+			s.cfg.SMTPUser, s.cfg.SMTPPassword,
+			s.cfg.SMTPFrom)
+		if err != nil {
+			fmt.Printf("[EMAIL] 发送验证码失败: %v\n", err)
+		}
+	}()
+
+	return nil
+}
+
+func (s *AuthService) VerifyAndRegister(username, password, email, code string) (*model.User, string, error) {
+	username = strings.TrimSpace(username)
+	email = strings.TrimSpace(email)
+
+	if !utils.VerifyCode(email, code) {
+		return nil, "", fmt.Errorf("验证码无效或已过期")
+	}
+
+	if err := validateModerationField("用户名", username); err != nil {
+		createModerationHit(s.db, 0, "register", "用户名", username, err)
+		return nil, "", err
+	}
+
+	var exists int64
+	if err := s.db.Model(&model.User{}).Where("username = ?", username).Count(&exists).Error; err != nil {
+		return nil, "", err
+	}
+	if exists > 0 {
+		return nil, "", ErrUsernameExists
+	}
+
+	if err := utils.ValidatePassword(password, utils.DefaultPasswordPolicy); err != nil {
+		return nil, "", err
+	}
+
+	hash, err := utils.HashPassword(password)
+	if err != nil {
+		return nil, "", err
+	}
+
+	user := model.User{
+		Username:      username,
+		Password:      hash,
+		Role:          model.RoleUser,
+		Status:        model.UserActive,
+		Email:         email,
+		EmailVerified: true,
 	}
 
 	if err := s.db.Create(&user).Error; err != nil {

@@ -77,6 +77,8 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 	api.Use(middleware.CSRF())
 	{
 		api.POST("/auth/register", middleware.RedisRateLimit("register", 5, time.Minute), authHandler.Register)
+		api.POST("/auth/send-code", middleware.RedisRateLimit("send-code", 3, time.Minute), authHandler.SendCode)
+		api.POST("/auth/verify-register", middleware.RedisRateLimit("verify-register", 5, time.Minute), authHandler.VerifyRegister)
 		api.POST("/auth/login", middleware.RedisRateLimit("login", 5, time.Minute), authHandler.Login)
 		api.POST("/auth/logout", authHandler.Logout)
 		api.GET("/authors/recommended", authHandler.RecommendedAuthors)

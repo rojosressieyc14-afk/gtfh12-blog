@@ -40,6 +40,45 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"user": user})
 }
 
+func (h *AuthHandler) SendCode(c *gin.Context) {
+	var payload struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+	if err := safeBindJSON(c, &payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	if err := h.authService.SendVerifyCode(payload.Email); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "验证码已发送"})
+}
+
+func (h *AuthHandler) VerifyRegister(c *gin.Context) {
+	var payload struct {
+		Username string `json:"username" binding:"required,min=3,max=32"`
+		Password string `json:"password" binding:"required,min=8,max=64"`
+		Email    string `json:"email" binding:"required,email"`
+		Code     string `json:"code" binding:"required,len=6"`
+	}
+	if err := safeBindJSON(c, &payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	user, token, err := h.authService.VerifyAndRegister(payload.Username, payload.Password, payload.Email, payload.Code)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	middleware.SetSessionCookies(c, token, middleware.AuthCookieMaxAge)
+	c.JSON(http.StatusCreated, gin.H{"user": user})
+}
+
 func (h *AuthHandler) Login(c *gin.Context) {
 	var payload authPayload
 	if err := safeBindJSON(c, &payload); err != nil {

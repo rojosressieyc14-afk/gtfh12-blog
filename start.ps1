@@ -96,6 +96,11 @@ QDRANT_ADDR=http://localhost:6333
 QDRANT_API_KEY=
 VITE_ADMIN_URL=http://localhost:5174
 API_ENCRYPTION_KEY=
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASSWORD=
+SMTP_FROM=
 "@ | Set-Content -Path $envFile
 }
 Write-Host '[OK] .env ready' -ForegroundColor Green

@@ -161,33 +161,70 @@
         </div>
 
         <form class="stack-form" @submit.prevent="submit">
-          <label>
-            用户名
-            <input
-              v-model.trim="form.username"
-              class="field-input"
-              placeholder="请输入用户名，至少 3 位"
-              @focus="handleFocus('username', $event)"
-              @input="handleFocus('username', $event)"
-            />
-          </label>
+          <template v-if="mode === 'login' || regStep === 1">
+            <label>
+              用户名
+              <input
+                v-model.trim="form.username"
+                class="field-input"
+                placeholder="请输入用户名，至少 3 位"
+                @focus="handleFocus('username', $event)"
+                @input="handleFocus('username', $event)"
+              />
+            </label>
 
-          <label>
-            密码
-            <input
-              v-model.trim="form.password"
-              class="field-input"
-              type="password"
-              placeholder="请输入密码，至少 6 位"
-              @focus="handleFocus('password', $event)"
-              @input="handleFocus('password', $event)"
-            />
-          </label>
+            <label>
+              密码
+              <input
+                v-model.trim="form.password"
+                class="field-input"
+                type="password"
+                placeholder="请输入密码，至少 6 位"
+                @focus="handleFocus('password', $event)"
+                @input="handleFocus('password', $event)"
+              />
+            </label>
 
-          <label v-if="mode === 'login'" class="remember-row">
-            <input v-model="form.remember" type="checkbox" class="remember-check" />
-            <span>记住账号密码</span>
-          </label>
+            <label v-if="mode === 'register'">
+              邮箱
+              <input
+                v-model.trim="form.email"
+                class="field-input"
+                type="email"
+                placeholder="请输入邮箱地址"
+                @focus="handleFocus('email', $event)"
+                @input="handleFocus('email', $event)"
+              />
+            </label>
+
+            <label v-if="mode === 'login'" class="remember-row">
+              <input v-model="form.remember" type="checkbox" class="remember-check" />
+              <span>记住账号密码</span>
+            </label>
+          </template>
+
+          <template v-else>
+            <p class="verify-hint">验证码已发送至 <strong>{{ form.email }}</strong></p>
+            <label>
+              验证码
+              <input
+                v-model.trim="form.code"
+                class="field-input verify-code-input"
+                placeholder="请输入 6 位验证码"
+                maxlength="6"
+                autocomplete="one-time-code"
+                @focus="handleFocus('code', $event)"
+              />
+            </label>
+            <button
+              type="button"
+              class="link-btn"
+              :disabled="codeCountdown > 0 || userStore.loading"
+              @click="sendCode"
+            >
+              {{ codeCountdown > 0 ? `重新发送 (${codeCountdown}s)` : "重新发送验证码" }}
+            </button>
+          </template>
 
           <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
 
@@ -199,8 +236,19 @@
                   ? "欢迎回来"
                   : mode === "login"
                     ? "进入我的站点"
-                    : "注册并进入站点"
+                    : regStep === 1
+                      ? "发送验证码"
+                      : "验证并注册"
             }}
+          </button>
+
+          <button
+            v-if="mode === 'register' && regStep === 2"
+            type="button"
+            class="link-btn back-btn"
+            @click="regStep = 1"
+          >
+            返回上一步
           </button>
         </form>
       </div>
@@ -218,6 +266,7 @@ const userStore = useUserStore();
 const sceneRef = ref(null);
 
 const mode = ref("login");
+const regStep = ref(1);
 const errorMessage = ref("");
 const focusedField = ref("username");
 const introPhase = ref("scatter");
@@ -228,10 +277,14 @@ const blink = ref(false);
 const look = reactive({ x: 0, y: 0 });
 const sceneParallax = reactive({ x: 0, y: 0 });
 const REMEMBER_USERNAME_KEY = "blog_remembered_username";
+const codeCountdown = ref(0);
+let countdownTimer = 0;
 
 const form = reactive({
   username: "",
   password: "",
+  email: "",
+  code: "",
   remember: false
 });
 
@@ -260,6 +313,7 @@ function switchMode(nextMode) {
   introPhase.value = "switch-scatter";
   errorMessage.value = "";
   focusedField.value = "username";
+  regStep.value = 1;
   clearSwitchTimers();
 
   switchTimer1 = window.setTimeout(() => {
@@ -462,17 +516,60 @@ async function submit() {
       } else {
         localStorage.removeItem(REMEMBER_USERNAME_KEY);
       }
+      celebrating.value = true;
+      successTimer = window.setTimeout(() => {
+        sessionStorage.setItem("blog_entry_animation", "auth-success");
+        router.push("/");
+      }, 980);
+    } else if (regStep.value === 1) {
+      if (!form.email) {
+        errorMessage.value = "请输入邮箱地址";
+        return;
+      }
+      await userStore.sendCodeAction(form.email);
+      regStep.value = 2;
+      startCountdown();
     } else {
-      await userStore.registerAction(form);
+      await userStore.registerAction({
+        username: form.username,
+        password: form.password,
+        email: form.email,
+        code: form.code
+      });
+      celebrating.value = true;
+      successTimer = window.setTimeout(() => {
+        sessionStorage.setItem("blog_entry_animation", "auth-success");
+        router.push("/");
+      }, 980);
     }
-    celebrating.value = true;
-    successTimer = window.setTimeout(() => {
-      sessionStorage.setItem("blog_entry_animation", "auth-success");
-      router.push("/");
-    }, 980);
   } catch (error) {
     errorMessage.value = error?.response?.data?.message || "操作失败，请稍后再试";
     celebrating.value = false;
+  }
+}
+
+function startCountdown() {
+  codeCountdown.value = 60;
+  window.clearInterval(countdownTimer);
+  countdownTimer = window.setInterval(() => {
+    codeCountdown.value--;
+    if (codeCountdown.value <= 0) {
+      window.clearInterval(countdownTimer);
+    }
+  }, 1000);
+}
+
+async function sendCode() {
+  errorMessage.value = "";
+  if (!form.email) {
+    errorMessage.value = "请输入邮箱地址";
+    return;
+  }
+  try {
+    await userStore.sendCodeAction(form.email);
+    startCountdown();
+  } catch (error) {
+    errorMessage.value = error?.response?.data?.message || "发送失败，请稍后再试";
   }
 }
 
@@ -521,6 +618,7 @@ onBeforeUnmount(() => {
   window.clearTimeout(introTimer2);
   clearSwitchTimers();
   window.clearTimeout(successTimer);
+  window.clearInterval(countdownTimer);
 });
 </script>
 
@@ -973,6 +1071,49 @@ onBeforeUnmount(() => {
   gap: 8px;
   cursor: pointer;
   font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+.verify-hint {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  margin: 0 0 4px;
+}
+
+.verify-hint strong {
+  color: var(--text);
+}
+
+.verify-code-input {
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: left;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+.link-btn:disabled {
+  color: var(--text-soft);
+  cursor: not-allowed;
+}
+
+.link-btn:disabled:hover {
+  text-decoration: none;
+}
+
+.back-btn {
   color: var(--text-soft);
 }
 </style>

@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { getMe, login, logout, register } from "../api/auth";
+import { getMe, login, logout, register, sendVerifyCode, verifyRegister } from "../api/auth";
 import { updateProfile } from "../api/profile";
 
 export const useUserStore = defineStore("user", {
@@ -26,11 +26,14 @@ export const useUserStore = defineStore("user", {
     async registerAction(payload) {
       this.loading = true;
       try {
-        const { data } = await register(payload);
+        const { data } = await verifyRegister(payload);
         this.profile = data.user;
       } finally {
         this.loading = false;
       }
+    },
+    async sendCodeAction(email) {
+      await sendVerifyCode(email);
     },
     async fetchProfile() {
       this.restoring = true;

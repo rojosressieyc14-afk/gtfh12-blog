@@ -34,6 +34,11 @@ type Config struct {
 	RedisAddr     string
 	RedisPassword string
 	RedisDB       int
+	SMTPHost      string
+	SMTPPort      string
+	SMTPUser      string
+	SMTPPassword  string
+	SMTPFrom      string
 }
 
 func Load() Config {
@@ -64,6 +69,11 @@ func Load() Config {
 		RedisAddr:     getEnv("REDIS_ADDR", "127.0.0.1:6379"),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 		RedisDB:       getEnvInt("REDIS_DB", 0),
+		SMTPHost:      getEnv("SMTP_HOST", ""),
+		SMTPPort:      getEnv("SMTP_PORT", "587"),
+		SMTPUser:      getEnv("SMTP_USER", ""),
+		SMTPPassword:  getEnv("SMTP_PASSWORD", ""),
+		SMTPFrom:      getEnv("SMTP_FROM", ""),
 	}
 	cfg.normalize()
 	return cfg
@@ -125,6 +135,14 @@ func (cfg *Config) normalize() {
 		cfg.RedisAddr = "127.0.0.1:6379"
 	}
 	cfg.RedisPassword = strings.TrimSpace(cfg.RedisPassword)
+	cfg.SMTPHost = strings.TrimSpace(cfg.SMTPHost)
+	cfg.SMTPPort = strings.TrimSpace(cfg.SMTPPort)
+	if cfg.SMTPPort == "" {
+		cfg.SMTPPort = "587"
+	}
+	cfg.SMTPUser = strings.TrimSpace(cfg.SMTPUser)
+	cfg.SMTPPassword = strings.TrimSpace(cfg.SMTPPassword)
+	cfg.SMTPFrom = strings.TrimSpace(cfg.SMTPFrom)
 }
 
 func (cfg Config) Validate() error {
@@ -159,6 +177,7 @@ func (cfg Config) GetDeepSeekURL() string { return cfg.DeepSeekURL }
 func (cfg Config) GetQdrantAddr() string { return cfg.QdrantAddr }
 func (cfg Config) GetQdrantAPIKey() string { return cfg.QdrantAPIKey }
 func (cfg Config) GetAPIEncryptionKey() string { return cfg.APIEncryptionKey }
+func (cfg Config) IsSMTPEnabled() bool { return cfg.SMTPHost != "" && cfg.SMTPUser != "" }
 
 func (cfg Config) StartupSummary() string {
 	return fmt.Sprintf(
