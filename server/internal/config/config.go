@@ -70,7 +70,7 @@ func Load() Config {
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 		RedisDB:       getEnvInt("REDIS_DB", 0),
 		SMTPHost:      getEnv("SMTP_HOST", ""),
-		SMTPPort:      getEnv("SMTP_PORT", "587"),
+		SMTPPort:      getEnv("SMTP_PORT", "465"),
 		SMTPUser:      getEnv("SMTP_USER", ""),
 		SMTPPassword:  getEnv("SMTP_PASSWORD", ""),
 		SMTPFrom:      getEnv("SMTP_FROM", ""),
